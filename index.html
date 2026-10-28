@@ -1,0 +1,2437 @@
+<!doctype html>
+<html lang="nb">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Demo av 4CAST med simulerte data.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2314211C'/%3E%3Cpath d='M9 23v-4M14 23v-8M19 23v-6M24 23V9' stroke='%23F2F4F3' stroke-width='3' stroke-linecap='round' fill='none'/%3E%3C/svg%3E">
+<title>4CAST Demo</title>
+<style>
+:root{
+  color-scheme:light;
+  --bg:#F2F4F3; --surface:#FFFFFF; --surface-2:#F6F8F7; --sunk:#E5EAE7;
+  --ink:#14211C; --ink-2:#3B4943; --muted:#55635C; --line:#D5DDD9; --line-2:#E6EBE8; --field:#76857E;
+  --accent:#1A56C4; --accent-hover:#14469F; --accent-ink:#FFFFFF; --accent-soft:#E6EEFB;
+  --good:#0ca30c; --warn:#fab219; --crit:#d03b3b;
+  --good-ink:#0B6B19; --warn-ink:#6E4A00; --crit-ink:#A12424;
+  --good-soft:#E1F3E0; --warn-soft:#FDF0CE; --crit-soft:#FBE2E1;
+  --danger:#A12424; --danger-ink:#FFFFFF;
+  --s1:#2a78d6; --s-grey:#7D8B85;
+  --h0:#E9EEEB; --h1:#cde2fb; --h2:#86b6ef; --h3:#3987e5; --h4:#1c5cab;
+  --map-lav:#9ED3A6; --map-middels:#F4D06F; --map-hoy:#E5735F; --map-none:#E4E9E6; --map-floor:#F7F9F8; --map-hoy-t:#14211C;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#0E1412; --surface:#161E1B; --surface-2:#1B2421; --sunk:#25302C;
+    --ink:#E7EEEA; --ink-2:#BAC6C0; --muted:#97A69F; --line:#2E3B36; --line-2:#222C28; --field:#72827B;
+    --accent:#86A9FF; --accent-hover:#A3BEFF; --accent-ink:#0E1412; --accent-soft:#1D2A4A;
+    --good-ink:#63D463; --warn-ink:#F6C453; --crit-ink:#F58A8A;
+    --good-soft:#15301A; --warn-soft:#382C0E; --crit-soft:#3C1A1A;
+    --danger:#F58A8A; --danger-ink:#0E1412;
+    --s1:#3987e5; --s-grey:#7F8E87;
+    --h0:#1F2925; --h1:#16365f; --h2:#1c5cab; --h3:#3987e5; --h4:#9ec5f4;
+    --map-lav:#2F6B45; --map-middels:#7D6420; --map-hoy:#A63A31; --map-none:#2A3430; --map-floor:#121815; --map-hoy-t:#F4F7F5;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0E1412; --surface:#161E1B; --surface-2:#1B2421; --sunk:#25302C;
+  --ink:#E7EEEA; --ink-2:#BAC6C0; --muted:#97A69F; --line:#2E3B36; --line-2:#222C28; --field:#72827B;
+  --accent:#86A9FF; --accent-hover:#A3BEFF; --accent-ink:#0E1412; --accent-soft:#1D2A4A;
+  --good-ink:#63D463; --warn-ink:#F6C453; --crit-ink:#F58A8A;
+  --good-soft:#15301A; --warn-soft:#382C0E; --crit-soft:#3C1A1A;
+  --danger:#F58A8A; --danger-ink:#0E1412;
+  --s1:#3987e5; --s-grey:#7F8E87;
+  --h0:#1F2925; --h1:#16365f; --h2:#1c5cab; --h3:#3987e5; --h4:#9ec5f4;
+  --map-lav:#2F6B45; --map-middels:#7D6420; --map-hoy:#A63A31; --map-none:#2A3430; --map-floor:#121815; --map-hoy-t:#F4F7F5;
+}
+*,*::before,*::after{box-sizing:border-box}
+[hidden]{display:none!important}
+html{background:var(--bg)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;-webkit-text-size-adjust:100%}
+a{color:var(--accent)}
+a:hover{color:var(--accent-hover)}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+h1,h2,h3,h4{text-wrap:balance;line-height:1.25;overflow-wrap:break-word}
+.sr-only{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+svg.i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.skip{position:absolute;left:16px;top:-80px;z-index:80;background:var(--surface);color:var(--ink);border:2px solid var(--accent);border-radius:8px;padding:10px 14px;font-weight:700;text-decoration:none}
+.skip:focus{top:12px}
+
+/* Layout. The manager view is responsive. The employee view and the login are always a phone-width app. */
+.app{display:grid;grid-template-columns:240px minmax(0,1fr);min-height:100vh}
+.side{position:sticky;top:0;align-self:start;height:100vh;overflow-y:auto;background:var(--surface);border-right:1px solid var(--line);padding:20px 12px;display:flex;flex-direction:column;gap:22px}
+.brand{display:flex;align-items:center;gap:10px;padding:0 8px}
+.logo{width:36px;height:36px;flex:none;display:block}
+.logo .lb{fill:var(--ink)}
+.logo .lf{stroke:var(--bg);stroke-width:3;stroke-linecap:round;fill:none}
+.wordmark{display:block;font-weight:800;font-size:20px;letter-spacing:.04em;line-height:1}
+.store{display:block;font-size:13px;color:var(--muted);margin-top:4px;line-height:1.3}
+.nav ul{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+.nav a{display:flex;align-items:center;gap:10px;padding:10px;border-radius:8px;color:var(--ink);text-decoration:none;font-weight:600;font-size:15px}
+.nav a:hover{background:var(--surface-2)}
+.nav a[aria-current="page"]{background:var(--accent-soft);color:var(--accent)}
+.nav a .nbadge{margin-left:auto}
+.side-user{margin-top:auto;display:grid;gap:10px;padding:0 8px}
+.who{display:flex;align-items:center;gap:10px;min-width:0}
+.who b{display:block;font-size:14px;line-height:1.25;overflow-wrap:anywhere}
+.who small{display:block;font-size:13px;color:var(--muted)}
+.avatar{width:34px;height:34px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-weight:700;font-size:13px;flex:none}
+.topbar{display:none;align-items:center;gap:10px;padding:10px 16px;background:var(--surface);border-bottom:1px solid var(--line);position:sticky;top:env(safe-area-inset-top,0px);z-index:20}
+.topbar .logo{width:30px;height:30px}
+.topbar .grow{flex:1;min-width:0;overflow:hidden;container-type:inline-size}
+.topbar .store{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@container (max-width:79px){.topbar .grow > *{display:none}}
+.topbar.has-back .logo{display:none}
+.top-user{display:flex;align-items:center;gap:8px}
+/* Back button: in the top bar when it is shown, otherwise at the top of the page */
+.back{display:inline-flex;align-items:center;gap:4px;min-height:44px;margin-left:-4px;padding:6px 10px 6px 4px;border:0;border-radius:8px;background:none;color:var(--accent);font-weight:650;font-size:15px;line-height:1.2;white-space:nowrap;cursor:pointer}
+@media (hover:hover){.back:hover{background:var(--accent-soft);color:var(--accent-hover)}}
+.back svg{width:20px;height:20px}
+.back-row{margin:-12px 0 8px}
+body[data-role="ansatt"] #backMain{display:none}
+main{padding:28px 32px 48px;min-width:0;outline:none}
+.wrap{max-width:1040px;margin:0 auto}
+.foot{max-width:1040px;margin:40px auto 0;padding-top:16px;border-top:1px solid var(--line);display:flex;flex-wrap:wrap;gap:8px 20px;font-size:14px}
+.foot a{color:var(--ink-2)}
+.bottomnav{display:none;position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--surface);border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom,0px))}
+.bottomnav a{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:50px;padding:4px 2px;border-radius:8px;color:var(--ink-2);text-decoration:none;font-size:12px;font-weight:600}
+.bottomnav a[aria-current="page"]{color:var(--accent);background:var(--accent-soft)}
+.bn-i{position:relative;display:inline-flex}
+.bn-i .nbadge{position:absolute;top:-7px;left:13px}
+.bn-i .ndot{position:absolute;top:-2px;right:-5px}
+@media (max-width:899px){
+  body[data-role="sjef"] .app{grid-template-columns:minmax(0,1fr)}
+  body[data-role="sjef"] .side{display:none}
+  body[data-role="sjef"] .topbar{display:flex}
+  body[data-role="sjef"] #backMain{display:none}
+  body[data-role="sjef"] main{padding:20px 16px 112px}
+  body[data-role="sjef"] .bottomnav{display:grid;grid-template-columns:repeat(5,1fr)}
+}
+body[data-role="ansatt"] .app,body[data-role="ute"] .app{grid-template-columns:minmax(0,1fr)}
+body[data-role="ansatt"] .side,body[data-role="ute"] .side{display:none}
+body[data-role="ansatt"] .col,body[data-role="ute"] .col{width:100%;max-width:460px;margin:0 auto;min-height:100vh;background:var(--bg)}
+body[data-role="ansatt"] .topbar{display:flex}
+body[data-role="ansatt"] main{padding:18px 16px 112px}
+body[data-role="ute"] main{padding:18px 16px 40px}
+body[data-role="ansatt"] .bottomnav{display:grid;grid-template-columns:repeat(3,1fr);left:50%;right:auto;width:min(460px,100%);transform:translateX(-50%)}
+body[data-role="ansatt"] .vhead h1{font-size:26px}
+@media (min-width:600px){
+  body[data-role="ansatt"],body[data-role="ute"]{background:var(--sunk)}
+  body[data-role="ansatt"] .col,body[data-role="ute"] .col{border-left:1px solid var(--line);border-right:1px solid var(--line)}
+}
+
+/* Common */
+.vhead{margin-bottom:20px}
+.vhead h1{font-size:30px;font-weight:800;letter-spacing:-.015em;margin:0 0 6px;outline:none}
+.vhead p{margin:0;color:var(--ink-2);max-width:68ch}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px;min-width:0}
+.stack{display:grid;gap:16px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:16px}
+.ch{font-size:19px;margin:0 0 4px}
+.h3{font-size:16px;margin:16px 0 8px}
+.sub{color:var(--ink-2);margin:0 0 14px;font-size:15px}
+.muted{color:var(--muted)}
+.small{font-size:14px}
+.note{display:flex;gap:10px;align-items:flex-start;border-radius:10px;padding:12px 14px;margin:0 0 16px;font-size:15px;background:var(--surface);border:1px solid var(--line)}
+.note svg{margin-top:1px}
+.note.info{background:var(--accent-soft);border-color:transparent}
+.note.info svg{color:var(--accent)}
+.note.warn{background:var(--warn-soft);border-color:transparent}
+.note.warn svg{color:var(--warn-ink)}
+.note.err{background:var(--crit-soft);border-color:transparent}
+.note.err svg{color:var(--crit-ink)}
+.note p{margin:0}
+.tag{display:inline-flex;align-items:center;gap:5px;font-size:13px;font-weight:650;padding:3px 8px;border-radius:6px;background:var(--sunk);color:var(--ink-2);line-height:1.3;white-space:nowrap}
+.res{display:inline-flex;align-items:center;font-size:13px;font-weight:700;padding:3px 8px;border-radius:6px;white-space:nowrap;line-height:1.3}
+.res.venter{background:var(--warn-soft);color:var(--warn-ink)}
+.res.bekreftet{background:var(--crit-soft);color:var(--crit-ink)}
+.res.ikke{background:var(--sunk);color:var(--ink-2)}
+.newtag{display:inline-block;font-size:12px;font-weight:700;color:var(--accent-ink);background:var(--accent);border-radius:4px;padding:1px 6px;margin-left:6px;vertical-align:1px;white-space:nowrap}
+.nbadge{display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 6px;border-radius:6px;background:var(--crit);color:#FFFFFF;font-size:12px;font-weight:700;line-height:1}
+.ndot{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--crit);box-shadow:0 0 0 2px var(--surface)}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:9px 16px;border-radius:8px;border:1px solid transparent;font-weight:650;font-size:15px;cursor:pointer;text-decoration:none;line-height:1.2}
+.btn svg{width:18px;height:18px}
+.btn-primary{background:var(--accent);color:var(--accent-ink)}
+.btn-primary:hover{background:var(--accent-hover);color:var(--accent-ink)}
+.btn-secondary{background:var(--surface);color:var(--ink);border-color:var(--field)}
+.btn-secondary:hover{border-color:var(--ink);color:var(--ink)}
+.btn-danger{background:var(--danger);color:var(--danger-ink)}
+.btn-lg{min-height:52px;padding:12px 22px;font-size:17px}
+.btn-sm{min-height:36px;padding:6px 10px;font-size:14px}
+.btn-block{width:100%}
+.btn[disabled]{opacity:.55;cursor:not-allowed}
+.btn-row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.linkbtn{background:none;border:0;padding:4px 0;color:var(--accent);text-decoration:underline;cursor:pointer;font-weight:600;font-size:14px}
+
+/* Forms */
+fieldset{border:0;margin:0 0 24px;padding:0;min-width:0}
+fieldset.plain{margin:0}
+legend,.q-label{display:block;font-size:17px;font-weight:700;padding:0;margin:0 0 10px}
+.opt-grid{display:grid;gap:8px;grid-template-columns:repeat(auto-fill,minmax(min(100%,180px),1fr))}
+.opt-grid.two{grid-template-columns:repeat(auto-fill,minmax(min(100%,200px),1fr))}
+.opt-row{display:flex;flex-wrap:wrap;gap:8px}
+.opt{display:flex;gap:10px;align-items:flex-start;padding:11px 14px;border:1px solid var(--field);border-radius:8px;background:var(--surface);cursor:pointer;min-height:48px}
+.opt:hover{border-color:var(--ink)}
+.opt input{width:20px;height:20px;margin:1px 0 0;accent-color:var(--accent);flex:none;cursor:pointer}
+.opt b{display:block;font-weight:650;line-height:1.3}
+.opt small{display:block;color:var(--ink-2);font-size:14px;line-height:1.35;margin-top:2px}
+.opt:has(input:checked){border-color:var(--accent);background:var(--accent-soft);box-shadow:inset 0 0 0 1px var(--accent)}
+#stedOpts{grid-template-columns:repeat(2,minmax(0,1fr))}
+#stedOpts .opt{padding:10px;min-height:44px;gap:8px}
+#stedOpts .opt b{font-size:15px;overflow-wrap:anywhere}
+body[data-role="ansatt"] .card{padding:16px}
+.subfields{display:flex;flex-wrap:wrap;gap:12px 16px;margin-top:12px}
+.field{margin:0 0 18px}
+.field label,.subfields label{display:block;font-weight:650;margin-bottom:6px}
+.field label.q-label{font-size:17px;font-weight:700}
+.hint{color:var(--ink-2);font-size:14px;margin:-2px 0 8px}
+input[type=text],input[type=password],input[type=time],input[type=date],select{min-height:44px;padding:8px 12px;border:1px solid var(--field);border-radius:8px;background:var(--surface);color:var(--ink);max-width:100%}
+input[type=text]{width:100%}
+input[type=file]{max-width:100%}
+input.w-sm{width:12em}
+select{min-width:min(100%,14em)}
+textarea{display:block;width:100%;min-height:84px;padding:10px 12px;border:1px solid var(--field);border-radius:8px;background:var(--surface);color:var(--ink);resize:vertical;line-height:1.45}
+input[aria-invalid="true"],select[aria-invalid="true"],textarea[aria-invalid="true"]{border:2px solid var(--crit-ink)}
+.counter{font-size:13px;color:var(--muted);margin:4px 0 0;text-align:right;font-variant-numeric:tabular-nums}
+.field-error{display:flex;gap:6px;align-items:flex-start;color:var(--crit-ink);font-weight:650;font-size:15px;margin:0 0 10px}
+.field-error svg{width:18px;height:18px;margin-top:1px}
+.error-summary{border:2px solid var(--crit-ink);border-radius:10px;padding:14px 16px;margin:0 0 22px;background:var(--crit-soft);outline:none}
+.error-summary:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.error-summary h2{font-size:17px;margin:0 0 8px;color:var(--crit-ink)}
+.error-summary ul{margin:0;padding-left:20px}
+.error-summary a{color:var(--crit-ink);font-weight:650}
+.safety{display:flex;gap:10px;font-size:14px;color:var(--ink-2);margin:16px 0 0}
+.safety svg{width:18px;height:18px;color:var(--warn-ink);margin-top:1px}
+.done h2{display:flex;align-items:center;gap:10px;font-size:22px;margin:0 0 14px;outline:none}
+.done h2 .ok{width:32px;height:32px;border-radius:50%;background:var(--good);color:#0F1A14;display:grid;place-items:center;flex:none}
+.done h2 .ok svg{width:18px;height:18px;stroke-width:2.6}
+.sumlist{margin:0 0 16px;display:grid;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.sumlist div{display:grid;grid-template-columns:minmax(96px,32%) minmax(0,1fr);gap:12px;padding:9px 14px;border-top:1px solid var(--line-2)}
+.sumlist div:first-child{border-top:0}
+.sumlist dt{color:var(--muted);font-size:14px;font-weight:600}
+.sumlist dd{margin:0;font-weight:600;overflow-wrap:anywhere}
+
+/* Incidents */
+.list{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.inc{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.inc.open{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.inc-head{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:start;width:100%;text-align:left;background:none;border:0;padding:12px 14px;cursor:pointer;color:var(--ink)}
+.inc-head:hover{background:var(--surface-2)}
+.inc-head:focus-visible{outline-offset:-3px}
+.inc-main{display:grid;gap:2px;min-width:0}
+.inc-title{font-weight:700;overflow-wrap:anywhere}
+.inc-meta{font-size:14px;color:var(--muted)}
+.inc-desc{font-size:15px;color:var(--ink-2);overflow-wrap:anywhere}
+.inc-body{padding:2px 14px 16px;display:grid;gap:12px}
+.inc-full{margin:0;font-size:16px;overflow-wrap:anywhere}
+.inc.static{padding:12px 14px;display:grid;gap:8px}
+.inc-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:start}
+.kv{margin:0;display:grid;gap:4px;font-size:14px}
+.kv div{display:flex;flex-wrap:wrap;gap:0 8px}
+.kv dt{color:var(--muted);font-weight:600;min-width:6.5em}
+.kv dd{margin:0}
+.answer{background:var(--surface-2);border:1px solid var(--line-2);border-radius:10px;padding:10px 12px;overflow-wrap:anywhere}
+.answer p{margin:0}
+.answer p + p{margin-top:4px}
+.confirm{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.day-h{font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:20px 0 8px}
+.review{display:grid;gap:4px}
+.choice{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,160px),1fr));gap:8px}
+.empty{display:flex;gap:12px;align-items:center;padding:6px 0}
+.empty svg{color:var(--good-ink);width:28px;height:28px}
+.empty p{margin:0}
+.list-count{font-size:15px;color:var(--ink-2);margin:0 0 10px}
+
+/* Home */
+.home-grid{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(260px,1fr);gap:16px;align-items:start}
+@media (max-width:1099px){.home-grid{grid-template-columns:minmax(0,1fr)}}
+.home-side{display:grid;gap:16px}
+.mini-kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:10px 0 12px}
+.mini-kpis div{background:var(--surface-2);border-radius:10px;padding:10px;min-width:0}
+.mini-kpis b{display:block;font-size:24px;line-height:1.1}
+.mini-kpis span{font-size:13px;color:var(--muted)}
+
+/* Reports */
+.report{display:grid;gap:12px}
+.report-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px}
+.report-head .ch{margin:0}
+.report-msg{margin:0;font-size:16px;white-space:pre-line;overflow-wrap:anywhere;background:var(--accent-soft);border-radius:10px;padding:12px 14px}
+.report-nums{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,140px),1fr));gap:8px}
+.num{background:var(--surface-2);border-radius:10px;padding:10px 12px;min-width:0}
+.num b{display:block;font-size:20px;line-height:1.2;overflow-wrap:anywhere}
+.num span{font-size:13px;color:var(--muted)}
+
+/* Login */
+.login{display:grid;gap:12px;padding-top:20px}
+.login .logo{width:56px;height:56px}
+.login h1{font-size:34px;font-weight:800;letter-spacing:.04em;margin:6px 0 0;outline:none}
+.login h2{font-size:19px;margin:14px 0 0}
+.user-list{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.user-card{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:14px 16px;border:1px solid var(--field);border-radius:12px;background:var(--surface);color:var(--ink);cursor:pointer;min-height:64px}
+.user-card:hover{border-color:var(--ink)}
+.user-card b{display:block;font-size:17px}
+.user-card small{display:block;color:var(--muted);font-size:14px}
+.user-card > svg:last-child{margin-left:auto;color:var(--muted)}
+
+/* Statistics */
+.toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;margin-bottom:16px}
+.seg{display:inline-flex;flex-wrap:wrap;border:1px solid var(--field);border-radius:8px;overflow:hidden;background:var(--surface)}
+.seg button{border:0;border-right:1px solid var(--line);background:none;padding:9px 13px;font-weight:600;font-size:14px;min-height:42px;cursor:pointer;color:var(--ink-2)}
+.seg button:last-child{border-right:0}
+.seg button:focus-visible{outline-offset:-4px}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:12px;margin-bottom:16px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px}
+.kpi .kl{margin:0 0 6px;font-size:14px;color:var(--muted);font-weight:600}
+.kpi .kv{margin:0;font-size:32px;font-weight:800;letter-spacing:-.02em;line-height:1.1}
+.kpi .ks{margin:8px 0 0;font-size:14px;color:var(--ink-2)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:14px;color:var(--ink-2);margin:6px 0 8px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{width:12px;height:12px;border-radius:3px;display:inline-block;flex:none}
+.sw.b{background:var(--crit)}
+.sw.i{background:var(--s-grey)}
+.sw.v{background:var(--warn)}
+.chart{width:100%;position:relative}
+.chart svg{display:block;width:100%;height:auto;overflow:visible}
+.c-grid{stroke:var(--line-2);stroke-width:1}
+.c-base{stroke:var(--field);stroke-width:1}
+.c-tick{font-size:12px;fill:var(--muted);font-family:var(--sans)}
+.c-cap{font-size:12px;font-weight:700;fill:var(--ink);font-family:var(--sans)}
+.c-b{fill:var(--crit)}
+.c-i{fill:var(--s-grey)}
+.c-v{fill:var(--warn)}
+.partial .bar{opacity:.5}
+.hit{fill:transparent}
+.chart svg:hover .col:not(:hover) .bar{opacity:.4}
+.h0{fill:var(--h0)} .h1{fill:var(--h1)} .h2{fill:var(--h2)} .h3{fill:var(--h3)} .h4{fill:var(--h4)}
+.heat-legend{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;font-size:13px;color:var(--ink-2);margin-top:10px}
+.heat-legend .ramp{display:inline-flex;gap:2px}
+.heat-legend .ramp i{width:18px;height:12px;border-radius:2px;display:inline-block}
+.bars{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+.bars li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;align-items:baseline}
+.bars .bn{font-size:15px;font-weight:600;min-width:0;overflow-wrap:anywhere}
+.bars .bv{font-size:14px;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.bars .bv em{font-style:normal;color:var(--muted)}
+.bars .bt{grid-column:1 / -1;height:10px;position:relative}
+.bars .bf{position:absolute;left:0;top:0;bottom:0;background:var(--s1);border-radius:0 4px 4px 0;min-width:3px}
+details.tbl-d{margin-top:12px}
+details.tbl-d > summary{cursor:pointer;color:var(--accent);font-weight:600;padding:6px 0;width:max-content;max-width:100%}
+.tbl-wrap{position:relative;overflow-x:auto;border:1px solid var(--line);border-radius:10px;margin-top:8px}
+table.tbl{border-collapse:collapse;width:100%;font-size:14px}
+.tbl th,.tbl td{padding:9px 12px;text-align:left;border-bottom:1px solid var(--line-2);white-space:nowrap;vertical-align:top}
+.tbl tr:last-child th,.tbl tr:last-child td{border-bottom:0}
+.tbl thead th{font-weight:700;background:var(--surface-2)}
+.tbl .num-c{text-align:right;font-variant-numeric:tabular-nums}
+.notes-list{margin:0;padding-left:20px;color:var(--ink-2);font-size:15px;display:grid;gap:6px}
+.map{position:relative}
+.map svg{display:block;max-width:100%;height:auto;margin:0 auto}
+.m-floor{fill:var(--map-floor)}
+.m-lav{fill:var(--map-lav)} .m-middels{fill:var(--map-middels)} .m-hoy{fill:var(--map-hoy)} .m-none{fill:var(--map-none)}
+.m-edge{stroke:var(--ink-2);stroke-width:1.5;fill:none;stroke-linecap:square}
+.m-wall{fill:none;stroke:var(--ink);stroke-width:3;stroke-linecap:square}
+.m-zone{stroke:var(--ink-2);stroke-opacity:.3;stroke-width:1}
+.m-sel{fill:none;stroke:var(--accent);stroke-width:4;stroke-linecap:square;pointer-events:none}
+.m-door{font:650 12px var(--sans);fill:var(--ink-2)}
+.m-door-a{fill:none;stroke:var(--ink-2);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.m-cell{cursor:pointer}
+.m-t{font:600 12px var(--sans);fill:var(--ink);pointer-events:none}
+.m-n{font:800 15px var(--sans);fill:var(--ink);pointer-events:none;font-variant-numeric:tabular-nums}
+.m-tx-hoy{fill:var(--map-hoy-t)}
+.map-legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;color:var(--ink-2);margin:12px 0 0}
+.map-legend span{display:inline-flex;align-items:center;gap:6px}
+.zone-list{list-style:none;margin:14px 0 0;padding:0;display:grid;gap:4px}
+.zone-list button{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:10px;align-items:center;width:100%;text-align:left;background:var(--surface);border:1px solid var(--line-2);border-radius:8px;padding:8px 12px;cursor:pointer;min-height:44px;color:var(--ink)}
+.zone-list button:hover{border-color:var(--field)}
+.zone-list button[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.zone-list .zn{font-weight:600;overflow-wrap:anywhere}
+.zone-list .zc{font-variant-numeric:tabular-nums;font-size:14px;color:var(--ink-2);white-space:nowrap}
+.lvl{display:inline-flex;font-size:13px;font-weight:650;padding:3px 8px;border-radius:6px;white-space:nowrap}
+.lvl.hoy{background:var(--map-hoy);color:var(--map-hoy-t)}
+.lvl.middels{background:var(--map-middels);color:var(--ink)}
+.lvl.lav{background:var(--map-lav);color:var(--ink)}
+.lvl.none{background:var(--sunk);color:var(--ink-2)}
+.zd{background:var(--surface-2);border:1px solid var(--line-2);border-radius:10px;padding:14px;margin-top:12px}
+.zd h3{margin:0 0 6px;font-size:17px}
+.zd p{margin:4px 0}
+
+/* Settings and floor plan */
+.set-rows{list-style:none;margin:0 0 12px;padding:0;display:grid;gap:8px}
+.set-rows li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center}
+.user-rows li{padding:6px 0;border-top:1px solid var(--line-2)}
+.user-rows li:first-child{border-top:0}
+.user-rows .confirm{grid-column:1 / -1}
+.add-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center}
+.danger-zone{border:1px solid var(--crit-ink)}
+.plan-tools{display:flex;flex-wrap:wrap;gap:10px 12px;align-items:flex-end;margin-bottom:14px}
+.plan-tools label{display:block;font-weight:650;font-size:14px;margin-bottom:4px}
+.palette{display:flex;flex-wrap:wrap;gap:6px}
+.palette .opt{min-height:40px;padding:7px 10px;align-items:center}
+.palette .opt input{margin:0}
+.palette .opt b{font-weight:600;font-size:14px}
+.plan-wrap{position:relative;max-width:640px;margin:14px auto 0;touch-action:none;user-select:none;-webkit-user-select:none}
+.plan-grid{display:grid;border:3px solid var(--ink);border-radius:4px;background:var(--surface)}
+.pc{aspect-ratio:1/1;border:0;padding:0;margin:0;background:var(--surface);cursor:crosshair;min-width:0;display:block;width:100%}
+.pc.on{background:var(--sunk)}
+.pc.sel{background:var(--accent-soft)}
+.pc:focus-visible{outline:3px solid var(--accent);outline-offset:-3px;position:relative;z-index:2}
+.plan-labels{position:absolute;left:3px;top:3px;right:3px;bottom:3px;pointer-events:none}
+.plan-labels span{position:absolute;transform:translate(-50%,-50%);font-size:11px;font-weight:650;line-height:1.15;text-align:center;color:var(--ink);overflow:hidden;max-height:2.4em;overflow-wrap:anywhere}
+.plan-save{position:sticky;bottom:0;background:var(--bg);padding:12px 0;border-top:1px solid var(--line);margin-top:16px;z-index:5}
+@media (max-width:899px){body[data-role="sjef"] .plan-save{bottom:calc(64px + env(safe-area-inset-bottom,0px))}}
+
+/* Info */
+.prose{max-width:70ch}
+.prose h2{font-size:20px;margin:26px 0 8px}
+.prose p,.prose li{color:var(--ink-2)}
+.prose ul{padding-left:22px;display:grid;gap:4px}
+
+/* Overlays */
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:70;background:var(--ink);color:var(--bg);border-radius:8px;padding:10px 16px;font-weight:600;font-size:15px;max-width:calc(100% - 32px);box-shadow:0 8px 24px -8px rgba(0,0,0,.35)}
+@media (max-width:899px){body[data-role="sjef"] .toast{bottom:calc(84px + env(safe-area-inset-bottom,0px))}}
+body[data-role="ansatt"] .toast{bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+.tip{position:fixed;z-index:75;left:0;top:0;background:var(--ink);color:var(--bg);border-radius:8px;padding:8px 10px;font-size:13px;line-height:1.4;pointer-events:none;max-width:240px;box-shadow:0 8px 20px -8px rgba(0,0,0,.4)}
+.tip b{display:block}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important;scroll-behavior:auto!important}}
+@media (forced-colors:active){.c-b,.c-i,.c-v,.bars .bf,.res,.nbadge,.ndot{forced-color-adjust:none}}
+</style>
+
+</head>
+<body>
+<a class="skip" href="#main" data-act="skip">Hopp til hovedinnhold</a>
+<div class="app">
+  <aside class="side" aria-label="Sidemeny">
+    <div class="brand"><span data-logo></span><span><span class="wordmark">4CAST</span><span class="store" id="storeSide"></span></span></div>
+    <nav class="nav" id="sideNav" aria-label="Hovedmeny"></nav>
+    <div class="side-user" id="sideUser"></div>
+  </aside>
+  <div class="col">
+    <header class="topbar"><span id="backTop" hidden></span><span data-logo></span><span class="grow"><span class="wordmark">4CAST</span><span class="store" id="storeTop"></span></span><span class="top-user" id="topUser"></span></header>
+    <main id="main" tabindex="-1">
+      <div class="wrap">
+        <div class="back-row" id="backMain" hidden></div>
+        <div id="banner"></div>
+        <section class="view" id="v-login" aria-labelledby="h-login" hidden></section>
+        <section class="view" id="v-ute" aria-labelledby="h-ute" hidden></section>
+        <section class="view" id="v-oppstart" aria-labelledby="h-oppstart" hidden></section>
+        <section class="view" id="v-registrer" aria-labelledby="h-registrer" hidden></section>
+        <section class="view" id="v-mine" aria-labelledby="h-mine" hidden></section>
+        <section class="view" id="v-rapporter" aria-labelledby="h-rapporter" hidden></section>
+        <section class="view" id="v-hjem" aria-labelledby="h-hjem" hidden></section>
+        <section class="view" id="v-logg" aria-labelledby="h-logg" hidden></section>
+        <section class="view" id="v-statistikk" aria-labelledby="h-statistikk" hidden></section>
+        <section class="view" id="v-innstillinger" aria-labelledby="h-innstillinger" hidden></section>
+        <section class="view" id="v-plantegning" aria-labelledby="h-plantegning" hidden></section>
+        <section class="view" id="v-om" aria-labelledby="h-om" hidden></section>
+        <section class="view" id="v-personvern" aria-labelledby="h-personvern" hidden></section>
+        <section class="view" id="v-vilkar" aria-labelledby="h-vilkar" hidden></section>
+      </div>
+      <footer class="foot" id="foot"></footer>
+    </main>
+  </div>
+</div>
+<nav class="bottomnav" id="bottomNav" aria-label="Hovedmeny" hidden></nav>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+<div class="tip" id="tip" hidden></div>
+
+<script>
+(() => {
+'use strict';
+const MODE = 'demo';
+document.documentElement.lang = 'nb';
+
+/* ================= Utilities ================= */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+const esc = v => String(v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pad = n => String(n).padStart(2, '0');
+const NBSP = String.fromCharCode(160);
+const nf = new Intl.NumberFormat('nb-NO', {maximumFractionDigits: 0});
+const fInt = n => nf.format(Math.round(n));
+const fPct = n => Math.round(n) + NBSP + '%';
+const pctOf = (a, b) => b ? a / b * 100 : 0;
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const genId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+const clone = o => JSON.parse(JSON.stringify(o));
+const cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
+function joinNo(a){ if (a.length <= 1) return a.join(''); return a.slice(0, -1).join(', ') + ' og ' + a[a.length - 1]; }
+function initials(name){ const p = String(name || '').trim().split(/\s+/).filter(Boolean); return p.length ? (p[0][0] + (p.length > 1 ? p[p.length - 1][0] : '')).toUpperCase() : '?'; }
+
+/* Dates are local wall-clock strings (YYYY-MM-DDTHH:mm) and day numbers, so daylight saving time never shifts hours. */
+const DAY = 864e5;
+function parseDate(s){ const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s || ''); if (!m) return NaN; return Math.round(Date.UTC(+m[1], +m[2] - 1, +m[3]) / DAY); }
+function dateOf(n){ const d = new Date(n * DAY); return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`; }
+function weekdayOf(n){ return (new Date(n * DAY).getUTCDay() + 6) % 7; }
+function mondayOf(n){ return n - weekdayOf(n); }
+function isoWeek(n){ const th = mondayOf(n) + 3; const y = new Date(th * DAY).getUTCFullYear(); const jan1 = Math.round(Date.UTC(y, 0, 1) / DAY); return {year: y, week: Math.floor((th - jan1) / 7) + 1}; }
+const WD = ['mandag','tirsdag','onsdag','torsdag','fredag','lørdag','søndag'];
+const WD_PL = ['mandager','tirsdager','onsdager','torsdager','fredager','lørdager','søndager'];
+const WD_S = ['Man','Tir','Ons','Tor','Fre','Lør','Søn'];
+const MON = ['januar','februar','mars','april','mai','juni','juli','august','september','oktober','november','desember'];
+const MON_S = ['jan.','feb.','mar.','apr.','mai','jun.','jul.','aug.','sep.','okt.','nov.','des.'];
+function parts(n){ const s = dateOf(n); return {y: +s.slice(0, 4), m: +s.slice(5, 7) - 1, d: +s.slice(8, 10)}; }
+function fDate(n){ const s = dateOf(n); return `${s.slice(8, 10)}.${s.slice(5, 7)}.${s.slice(0, 4)}`; }
+function fDateLong(n){ const p = parts(n); return `${WD[weekdayOf(n)]} ${p.d}. ${MON[p.m]}`; }
+function fRange(a, b){ const p = parts(a), q = parts(b); return p.m === q.m ? `${p.d}.–${q.d}. ${MON[p.m]}` : `${p.d}. ${MON_S[p.m]}–${q.d}. ${MON_S[q.m]}`; }
+function dayLabel(n, today){
+  if (n === today) return 'I dag';
+  if (n === today - 1) return 'I går';
+  const p = parts(n);
+  if (n > today - 7 && n < today) return `${cap(WD[weekdayOf(n)])} ${p.d}. ${MON[p.m]}`;
+  return `${p.d}. ${MON[p.m]} ${p.y}`;
+}
+function tidParts(s){ const m = /^(\d{4}-\d{2}-\d{2})T(\d{2}):(\d{2})$/.exec(s || ''); if (!m) return null; const day = parseDate(m[1]); if (!Number.isFinite(day) || dateOf(day) !== m[1]) return null; const hour = +m[2], minute = +m[3]; if (hour > 23 || minute > 59) return null; return {day, hour, minute}; }
+function whenStr(s, today){ const t = tidParts(s); return t ? `${dayLabel(t.day, today)} kl. ${pad(t.hour)}:${pad(t.minute)}` : ''; }
+let NOW_OVERRIDE = null;
+function now(){
+  if (NOW_OVERRIDE) return NOW_OVERRIDE;
+  const d = new Date();
+  const date = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  return {date, day: parseDate(date), hour: d.getHours(), minute: d.getMinutes(), str: `${date}T${pad(d.getHours())}:${pad(d.getMinutes())}`};
+}
+function setNowOverride(n){ NOW_OVERRIDE = n ? {...n, day: parseDate(n.date), str: `${n.date}T${pad(n.hour)}:${pad(n.minute)}`} : null; }
+const hrange = (a, b) => `kl.${NBSP}${pad(a)}–${pad(b)}`;
+
+/* ================= Domain ================= */
+const TYPES = {tyveri: 'Tyveri', mistenkt: 'Mistenkt tyveri'};
+const RES = {bekreftet: 'Bekreftet tyveri', ikke: 'Ikke bekreftet', venter: 'Venter på vurdering'};
+const RES_TAG = {bekreftet: 'Bekreftet tyveri', ikke: 'Ikke bekreftet', venter: 'Venter'};
+const DESC_MAX = 200, COMMENT_MAX = 300, MSG_MAX = 800;
+const DEFAULT_SETTINGS = {
+  butikk: '',
+  steder: [
+    {id:'inngang', navn:'Inngang og utgang'}, {id:'frukt', navn:'Frukt og grønt'}, {id:'brod', navn:'Brød og bakevarer'},
+    {id:'meieri', navn:'Meieri og ost'}, {id:'kjott', navn:'Kjøtt og pålegg'}, {id:'frys', navn:'Frysevarer'},
+    {id:'torr', navn:'Tørrvarer og kaffe'}, {id:'drikke', navn:'Drikke'}, {id:'snacks', navn:'Snacks og godteri'},
+    {id:'hygiene', navn:'Kosmetikk og hygiene'}, {id:'selvbetjening', navn:'Selvbetjente kasser'}, {id:'kasse', navn:'Betjent kasse'}
+  ],
+  plan: null
+};
+/* Floor plan: a grid seen from above with the entrance at the bottom. Each cell holds a department id or ''. */
+const PLAN_MIN = 6, PLAN_MAX = 24;
+/* A typical grocery store: cold counters and freezers along the back wall, bread and fruit along the side walls,
+   double-sided shelves with aisles between, cosmetics near the checkouts, and the entrance at the front left. */
+const TEMPLATE = {cols: 20, rows: 14, rects: [
+  ['frys', 0, 0, 6, 2], ['meieri', 6, 0, 7, 2], ['kjott', 13, 0, 7, 2],
+  ['frukt', 0, 3, 4, 8], ['torr', 5, 3, 11, 2], ['snacks', 5, 6, 11, 2], ['drikke', 5, 9, 11, 2], ['brod', 17, 3, 3, 5],
+  ['hygiene', 17, 8, 3, 3], ['inngang', 0, 12, 5, 2], ['selvbetjening', 6, 12, 6, 2], ['kasse', 13, 12, 6, 2]
+]};
+function emptyPlan(cols, rows){ return {cols, rows, cells: new Array(cols * rows).fill('')}; }
+function templatePlan(st){
+  const p = emptyPlan(TEMPLATE.cols, TEMPLATE.rows), used = new Set(), placed = new Set();
+  const fill = (id, r) => { for (let y = r[2]; y < r[2] + r[4]; y++) for (let x = r[1]; x < r[1] + r[3]; x++) p.cells[y * p.cols + x] = id; };
+  for (const r of TEMPLATE.rects) if (st.steder.some(s => s.id === r[0])){ fill(r[0], r); used.add(r[0]); placed.add(r[0]); }
+  for (const s of st.steder){
+    if (placed.has(s.id)) continue;
+    const r = TEMPLATE.rects.find(x => !used.has(x[0]));
+    if (r){ fill(s.id, r); used.add(r[0]); placed.add(s.id); }
+  }
+  return p;
+}
+function resizePlan(p, cols, rows){
+  const n = emptyPlan(cols, rows);
+  for (let y = 0; y < Math.min(rows, p.rows); y++) for (let x = 0; x < Math.min(cols, p.cols); x++) n.cells[y * cols + x] = p.cells[y * p.cols + x];
+  return n;
+}
+
+/* ================= Icons ================= */
+const ICONS = {
+  plus:'<path d="M12 5v14M5 12h14"/>',
+  home:'<path d="M4 10.5 12 4l8 6.5V20h-5.2v-5.5H9.2V20H4z"/>',
+  list:'<path d="M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01"/>',
+  chart:'<path d="M5 20v-8M11 20V5M17 20v-5M3 20.5h18"/>',
+  doc:'<path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4M10 12h6M10 16h6"/>',
+  inbox:'<path d="M4 13l2.5-7h11L20 13v6H4z"/><path d="M4 13h4.5l1 2h5l1-2H20"/>',
+  sliders:'<path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/>',
+  alert:'<path d="M12 3.8 2.8 19.5h18.4z"/><path d="M12 10v4.2M12 16.9v.2"/>',
+  check:'<path d="m5 12.5 4.5 4.5L19 7.5"/>',
+  info:'<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.6v.2"/>',
+  download:'<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>',
+  trash:'<path d="M5 7h14M10 7V4.5h4V7M7 7l1 13h8l1-13"/>',
+  undo:'<path d="M9 14 4 9l5-5M4 9h10a6 6 0 0 1 0 12h-3"/>',
+  arrow:'<path d="M5 12h14M13 6l6 6-6 6"/>',
+  back:'<path d="M19 12H5M11 6l-6 6 6 6"/>',
+  logout:'<path d="M14 5h4.5v14H14M10 8l-4 4 4 4M6 12h9"/>',
+  grid:'<rect x="4" y="4" width="16" height="16" rx="1"/><path d="M4 10h16M4 15h16M10 4v16M15 4v16"/>',
+  shield:'<path d="M12 3 5 6v5.5c0 4.4 3 8 7 9.5 4-1.5 7-5.1 7-9.5V6z"/>'
+};
+const icon = (n, cls = 'i') => `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true" focusable="false">${ICONS[n] || ''}</svg>`;
+const LOGO = '<svg class="logo" viewBox="0 0 32 32" aria-hidden="true" focusable="false"><rect class="lb" width="32" height="32" rx="8"/><path class="lf" d="M9 23v-4M14 23v-8M19 23v-6M24 23V9"/></svg>';
+
+/* ================= State ================= */
+const UI_DEFAULTS = () => ({
+  open: null, edit: null, draft: null, confirmDel: null, homeShown: 20,
+  logPeriod: '8u', logRes: 'alle', logSted: 'alle', logShown: 40,
+  statPeriod: '8u', statBasis: 'alle', mapSel: null,
+  mineShown: 30, mineSince: '', repSince: '', repWeek: null, repMsg: '', repMsgFor: null, repShown: 12,
+  setupDraft: null, setupDirty: false, setupMsg: null, confirmWipe: '', busy: false, regDone: null,
+  plan: {draft: null, dirty: false, sel: null, cursor: 0, history: [], confirm: null, msg: null},
+  pinFor: null, forgot: false, resetText: '', confirmUser: null, restore: null
+});
+const S = {
+  mode: null, ready: false, me: null, canWrite: true, viewAs: null, view: null, hist: [], users: [],
+  raw: {hendelser: [], vurderinger: [], rapporter: [], oppsett: null, status: null},
+  inc: [], byId: new Map(), reports: [], settings: clone(DEFAULT_SETTINGS), status: {rapporterSett: '', mineSett: ''},
+  names: {}, nameSnap: {}, invalidCount: 0, notice: null, exportAvail: false,
+  ui: UI_DEFAULTS()
+};
+function role(){ if (!S.me) return 'ute'; if (S.viewAs) return S.viewAs; return S.me.sjef ? 'sjef' : 'ansatt'; }
+
+/* ================= Normalising (all stored data is treated as untrusted) ================= */
+const ID_RE = /^[A-Za-z0-9_.~:@+-]{1,100}$/;
+const STED_RE = /^[a-z0-9_-]{1,40}$/;
+const WEEK_RE = /^\d{4}-W\d{2}$/;
+function cleanLine(v, max){ return typeof v === 'string' ? v.replace(/[\x00-\x1f\x7f]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, max) : ''; }
+function cleanText(v, max){ return typeof v === 'string' ? v.replace(/\r\n?/g, '\n').replace(/[\x00-\x09\x0b-\x1f\x7f]/g, '').replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim().slice(0, max) : ''; }
+const okInt = v => Number.isInteger(v) && v >= 0 && v <= 1e6;
+function normSettings(raw){
+  const out = clone(DEFAULT_SETTINGS);
+  if (!raw || typeof raw !== 'object') return out;
+  out.butikk = cleanLine(raw.butikk, 60);
+  if (Array.isArray(raw.steder)){
+    const seen = new Set(), list = [];
+    for (const s of raw.steder){
+      if (!s || !STED_RE.test(s.id) || seen.has(s.id)) continue;
+      const navn = cleanLine(s.navn, 60); if (!navn) continue;
+      seen.add(s.id); list.push({id: s.id, navn});
+    }
+    if (list.length) out.steder = list.slice(0, 60);
+  }
+  const p = raw.plan;
+  if (p && typeof p === 'object'){
+    const c = Number(p.cols), r = Number(p.rows);
+    if (Number.isInteger(c) && Number.isInteger(r) && c >= PLAN_MIN && c <= PLAN_MAX && r >= PLAN_MIN && r <= PLAN_MAX && Array.isArray(p.cells) && p.cells.length === c * r){
+      const ids = new Set(out.steder.map(s => s.id));
+      out.plan = {cols: c, rows: r, cells: p.cells.map(v => typeof v === 'string' && ids.has(v) ? v : '')};
+    }
+  }
+  return out;
+}
+function normInc(id, d){
+  if (!d || typeof d !== 'object' || typeof id !== 'string') return null;
+  if (d.type !== 'tyveri' && d.type !== 'mistenkt') return null;
+  const t = tidParts(d.tid); if (!t) return null;
+  return {
+    id, type: d.type, tid: d.tid, day: t.day, hour: t.hour, minute: t.minute, wd: weekdayOf(t.day),
+    sted: typeof d.sted === 'string' && STED_RE.test(d.sted) ? d.sted : 'ukjent-sted',
+    stedNavn: cleanLine(d.stedNavn, 60),
+    beskrivelse: cleanLine(d.beskrivelse, DESC_MAX),
+    av: typeof d.av === 'string' && ID_RE.test(d.av) ? d.av : '',
+    registrert: tidParts(d.registrert) ? d.registrert : d.tid
+  };
+}
+function normRev(id, d){
+  if (!d || typeof d !== 'object' || typeof id !== 'string') return null;
+  if (d.resultat !== 'bekreftet' && d.resultat !== 'ikke') return null;
+  return {id, resultat: d.resultat, kommentar: cleanText(d.kommentar, COMMENT_MAX), av: typeof d.av === 'string' && ID_RE.test(d.av) ? d.av : '', tid: tidParts(d.tid) ? d.tid : ''};
+}
+function normReport(id, d){
+  if (!d || typeof d !== 'object' || typeof d.uke !== 'string' || !weekFromId(d.uke)) return null;
+  const t = d.tall && typeof d.tall === 'object' ? d.tall : {};
+  const num = k => okInt(t[k]) ? t[k] : 0;
+  const tall = {antall: num('antall'), tyveri: num('tyveri'), mistenkt: num('mistenkt'), bekreftet: num('bekreftet'), ikke: num('ikke'), venter: num('venter'), forrige: num('forrige'),
+    avdelinger: Array.isArray(t.avdelinger) ? t.avdelinger.filter(a => a && okInt(a.n) && cleanLine(a.navn, 60)).slice(0, 3).map(a => ({navn: cleanLine(a.navn, 60), n: a.n})) : [],
+    tidsrom: t.tidsrom && Number.isInteger(t.tidsrom.fra) && Number.isInteger(t.tidsrom.til) && t.tidsrom.fra >= 0 && t.tidsrom.til <= 24 && t.tidsrom.fra < t.tidsrom.til ? {fra: t.tidsrom.fra, til: t.tidsrom.til, n: okInt(t.tidsrom.n) ? t.tidsrom.n : 0} : null};
+  return {id, uke: d.uke, tall, melding: cleanText(d.melding, MSG_MAX), publisert: tidParts(d.publisert) ? d.publisert : '', av: typeof d.av === 'string' && ID_RE.test(d.av) ? d.av : ''};
+}
+function normStatus(d){ return {rapporterSett: d && tidParts(d.rapporterSett) ? d.rapporterSett : '', mineSett: d && tidParts(d.mineSett) ? d.mineSett : ''}; }
+function recompute(){
+  S.settings = normSettings(S.raw.oppsett);
+  const revs = new Map();
+  for (const r of S.raw.vurderinger){ const n = normRev(r.id, r.data); if (n) revs.set(r.id, n); }
+  const inc = []; let bad = 0;
+  for (const r of S.raw.hendelser){
+    const n = normInc(r.id, r.data);
+    if (!n){ bad++; continue; }
+    n.rev = revs.get(n.id) || null; n.res = n.rev ? n.rev.resultat : 'venter';
+    inc.push(n);
+  }
+  inc.sort((a, b) => a.tid < b.tid ? -1 : a.tid > b.tid ? 1 : (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+  S.inc = inc; S.byId = new Map(inc.map(i => [i.id, i])); S.invalidCount = bad;
+  const snap = {}; for (const i of inc) if (i.stedNavn) snap[i.sted] = i.stedNavn; S.nameSnap = snap;
+  S.reports = S.raw.rapporter.map(r => normReport(r.id, r.data)).filter(Boolean).sort((a, b) => a.uke < b.uke ? 1 : a.uke > b.uke ? -1 : 0);
+  S.status = normStatus(S.raw.status);
+}
+function stedName(id){ const s = S.settings.steder.find(x => x.id === id); return s ? s.navn : (S.nameSnap[id] || 'Ukjent avdeling'); }
+function nameOf(id){ if (!id) return 'Ukjent'; if (S.me && id === S.me.id) return 'deg'; return S.names[id] || 'Ukjent ansatt'; }
+const mine = () => S.me ? S.inc.filter(i => i.av === S.me.id) : [];
+const pending = () => S.inc.filter(i => i.res === 'venter').sort((a, b) => a.registrert < b.registrert ? 1 : a.registrert > b.registrert ? -1 : 0);
+const newResultCount = () => mine().filter(i => i.rev && i.rev.tid && i.rev.tid > S.status.mineSett).length;
+const latestPublished = () => S.reports.reduce((best, r) => r.publisert && (!best || r.publisert > best.publisert) ? r : best, null);
+const hasNewReport = () => { const r = latestPublished(); return !!(r && r.publisert > S.status.rapporterSett); };
+
+/* ================= Analytics ================= */
+function countBy(list, fn){ const m = new Map(); for (const i of list){ const k = fn(i); m.set(k, (m.get(k) || 0) + 1); } return m; }
+function sortedEntries(m){ return Array.from(m.entries()).sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1)); }
+function hoursOf(list){ const h = new Array(24).fill(0); for (const i of list) h[i.hour]++; return h; }
+function bestWindow(hours, fra, til, len = 3){
+  if (!(til > fra)) return null;
+  const L = Math.min(len, til - fra);
+  let best = null;
+  for (let s = fra; s + L <= til; s++){ let c = 0; for (let h = s; h < s + L; h++) c += hours[h]; if (!best || c > best.c) best = {fra: s, til: s + L, c}; }
+  if (!best || best.c === 0) return null;
+  best.txt = hrange(best.fra, best.til);
+  return best;
+}
+function inRange(list, from, to){ return list.filter(i => i.day >= from && i.day <= to); }
+function periodRange(key, today){
+  const len = {'4u':28, '8u':56, '12u':84}[key];
+  if (len) return {from: today - len + 1, to: today, prevFrom: today - 2 * len + 1, prevTo: today - len};
+  if (key === 'aar'){ const from = parseDate(dateOf(today).slice(0, 4) + '-01-01'), l = today - from + 1; return {from, to: today, prevFrom: from - l, prevTo: from - 1}; }
+  const first = S.inc.length ? Math.min(S.inc[0].day, today) : today;
+  return {from: first, to: today, prevFrom: null, prevTo: null};
+}
+function compareText(P, n, today){
+  if (P.prevFrom == null) return '';
+  const firstDay = S.inc.length ? S.inc[0].day : today;
+  if (P.prevFrom < firstDay) return 'For kort historikk til å sammenligne med perioden før.';
+  const prev = inRange(S.inc, P.prevFrom, P.prevTo).length;
+  if (prev === 0) return 'Ingen registreringer i perioden før.';
+  const d = n - prev, sg = d > 0 ? '+' : d < 0 ? '−' : '';
+  return `${d > 0 ? '↑' : d < 0 ? '↓' : '→'} ${sg}${Math.abs(d)} (${sg}${Math.round(Math.abs(d) / prev * 100)}${NBSP}%) fra perioden før (${prev})`;
+}
+function makeBuckets(from, to){
+  const out = [];
+  const weeks = Math.ceil((to - mondayOf(from) + 1) / 7);
+  if (weeks <= 26){
+    for (let m = mondayOf(from); m <= to; m += 7){ const w = isoWeek(m); out.push({from: m, to: m + 6, label: `Uke ${w.week}`, short: String(w.week), partial: m + 6 > to, b: 0, i: 0, v: 0}); }
+    return {kind: 'uke', list: out};
+  }
+  let y = parts(from).y, mo = parts(from).m;
+  while (true){
+    const a = Math.round(Date.UTC(y, mo, 1) / DAY), b = Math.round(Date.UTC(y, mo + 1, 1) / DAY) - 1;
+    if (a > to) break;
+    out.push({from: a, to: b, label: `${cap(MON[mo])} ${y}`, short: MON_S[mo], partial: b > to, b: 0, i: 0, v: 0});
+    mo++; if (mo > 11){ mo = 0; y++; }
+  }
+  return {kind: 'maaned', list: out};
+}
+function weekIdOf(day){ const w = isoWeek(day); return `${w.year}-W${pad(w.week)}`; }
+function weekFromId(id){
+  const m = /^(\d{4})-W(\d{2})$/.exec(id || ''); if (!m) return null;
+  const y = +m[1], w = +m[2]; if (w < 1 || w > 53) return null;
+  const mon = mondayOf(Math.round(Date.UTC(y, 0, 4) / DAY)) + (w - 1) * 7;
+  if (weekIdOf(mon) !== id) return null;
+  return {id, year: y, week: w, from: mon, to: mon + 6};
+}
+function reportData(id){
+  const wk = weekFromId(id), l = inRange(S.inc, wk.from, wk.to);
+  const by = sortedEntries(countBy(l, i => i.sted)), w = bestWindow(hoursOf(l), 0, 24, 3);
+  const c = r => l.filter(i => i.res === r).length;
+  return {antall: l.length, tyveri: l.filter(i => i.type === 'tyveri').length, mistenkt: l.filter(i => i.type === 'mistenkt').length,
+    bekreftet: c('bekreftet'), ikke: c('ikke'), venter: c('venter'), forrige: inRange(S.inc, wk.from - 7, wk.to - 7).length,
+    avdelinger: by.slice(0, 3).map(([sid, n]) => ({navn: stedName(sid), n})), tidsrom: w ? {fra: w.fra, til: w.til, n: w.c} : null};
+}
+
+/* ================= Storage ================= */
+/*
+ * S.raw holds what is stored: hendelser, vurderinger and rapporter are [{id, data}], oppsett is one object and
+ * status is this person's own "last seen" times. The rest of the app only talks to Store.
+ * The local version saves everything in this browser, and the demo and tests keep it in memory.
+ * To share data between devices, let the Store methods call a server instead, put what it returns in S.raw
+ * and call onData(). Keep the {id, data} shape, and the rest of the app works as before.
+ */
+let MEM_STATUS = {};
+function errText(e){
+  const code = e && e.code;
+  if (code === 'local_full') return 'Nettleseren har ikke plass til flere data. Last ned en sikkerhetskopi, og slett gamle hendelser under Innstillinger.';
+  if (code === 'local_blocked') return 'Nettleseren lot ikke 4CAST lagre. Sjekk at nettstedet har lov til å lagre data.';
+  return 'Kunne ikke lagre. Prøv igjen.';
+}
+function upserted(arr, id, data){ return [...arr.filter(r => r.id !== id), {id, data}]; }
+/* Changes are made to copies, so a save that fails leaves everything as it was. */
+function commit(patch){
+  if (S.mode === 'local'){ writeLocal({...LOCAL, ...patch}); applyLocal(); }
+  else S.raw = {...S.raw, ...patch};
+  onData();
+}
+const Store = {
+  async addIncident(doc){
+    const id = genId(); commit({hendelser: [...S.raw.hendelser, {id, data: doc}]}); return id;
+  },
+  async removeIncident(id, withReview){
+    commit({hendelser: S.raw.hendelser.filter(r => r.id !== id), vurderinger: S.raw.vurderinger.filter(r => r.id !== id)});
+  },
+  async removeIncidents(ids, progress){
+    const set = new Set(ids);
+    if (progress) progress(ids.length, ids.length);
+    commit({hendelser: S.raw.hendelser.filter(r => !set.has(r.id)), vurderinger: S.raw.vurderinger.filter(r => !set.has(r.id))});
+  },
+  async setReview(id, doc){
+    commit({vurderinger: upserted(S.raw.vurderinger, id, doc)});
+  },
+  async saveReport(id, doc){
+    commit({rapporter: upserted(S.raw.rapporter, id, doc)});
+  },
+  async saveSettings(obj){
+    commit({oppsett: obj});
+  },
+  async saveStatus(obj){
+    if (S.mode === 'local'){ writeLocal({...LOCAL, status: {...LOCAL.status, [S.me.id]: obj}}); applyLocal(); }
+    else { MEM_STATUS[S.me.id] = obj; S.raw = {...S.raw, status: obj}; }
+    onData();
+  }
+};
+
+/* Local version: everything is saved in this browser under one key. Nothing is sent anywhere, and data is not shared between devices. */
+const LS_KEY = MODE === 'test' ? 'fourcast.test.v2' : 'fourcast.v2';
+const NAME_MAX = 60, USERS_MAX = 50, PIN_RE = /^\d{4,8}$/;
+let LOCAL = null, storageListener = false;
+function emptyLocal(){ return {app: '4CAST', versjon: 2, hendelser: [], vurderinger: [], rapporter: [], oppsett: null, brukere: [], status: {}}; }
+function lsAvailable(){ try { const k = LS_KEY + '.sjekk'; localStorage.setItem(k, '1'); localStorage.removeItem(k); return true; } catch (e) { return false; } }
+function docs(list){ return Array.isArray(list) ? list.filter(r => r && typeof r.id === 'string' && ID_RE.test(r.id) && r.data && typeof r.data === 'object' && !Array.isArray(r.data)).map(r => ({id: r.id, data: r.data})) : []; }
+const BAD_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
+function normUser(u){
+  if (!u || typeof u !== 'object' || typeof u.id !== 'string' || !ID_RE.test(u.id) || BAD_KEYS.has(u.id)) return null;
+  const navn = cleanLine(u.navn, NAME_MAX); if (!navn) return null;
+  const p = u.pin, okPin = !!p && typeof p === 'object' && typeof p.salt === 'string' && typeof p.hash === 'string' && /^[a-z0-9]{1,40}$/.test(p.salt) && /^[a-z0-9]{1,40}$/.test(p.hash);
+  const sjef = u.sjef === true && okPin;
+  return {id: u.id, navn, sjef, pin: sjef ? {salt: p.salt, hash: p.hash} : null, fjernet: u.fjernet === true};
+}
+function normLocal(obj){
+  const out = emptyLocal();
+  if (!obj || typeof obj !== 'object') return out;
+  out.hendelser = docs(obj.hendelser); out.vurderinger = docs(obj.vurderinger); out.rapporter = docs(obj.rapporter);
+  out.oppsett = obj.oppsett && typeof obj.oppsett === 'object' && !Array.isArray(obj.oppsett) ? obj.oppsett : null;
+  const seen = new Set();
+  for (const raw of Array.isArray(obj.brukere) ? obj.brukere : []){ const u = normUser(raw); if (u && !seen.has(u.id)){ seen.add(u.id); out.brukere.push(u); } }
+  const st = obj.status && typeof obj.status === 'object' ? obj.status : {};
+  for (const u of out.brukere) if (Object.prototype.hasOwnProperty.call(st, u.id) && st[u.id] && typeof st[u.id] === 'object') out.status[u.id] = normStatus(st[u.id]);
+  return out;
+}
+function readLocal(){
+  let obj = null;
+  try { const txt = localStorage.getItem(LS_KEY); if (txt) obj = JSON.parse(txt); }
+  catch (e) {
+    S.notice = 'Lagrede data i denne nettleseren kunne ikke leses. En kopi er tatt vare på, og 4CAST starter tomt.';
+    try { localStorage.setItem(LS_KEY + '.feil', localStorage.getItem(LS_KEY) || ''); } catch (_) { /* ignore */ }
+  }
+  LOCAL = normLocal(obj); applyLocal();
+}
+function writeLocal(next){
+  try { localStorage.setItem(LS_KEY, JSON.stringify(next)); }
+  catch (e) { throw {code: e && (e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED' || e.code === 22) ? 'local_full' : 'local_blocked'}; }
+  LOCAL = next;
+}
+function applyLocal(){
+  S.users = LOCAL.brukere;
+  S.names = Object.fromEntries(LOCAL.brukere.map(u => [u.id, u.navn]));
+  S.raw = {hendelser: LOCAL.hendelser, vurderinger: LOCAL.vurderinger, rapporter: LOCAL.rapporter, oppsett: LOCAL.oppsett, status: S.me ? LOCAL.status[S.me.id] || null : null};
+}
+function startLocal(){
+  S.ready = true; S.canWrite = true; S.exportAvail = true; S.notice = null;
+  if (!lsAvailable()){ S.mode = 'none'; LOCAL = emptyLocal(); applyLocal(); recompute(); return; }
+  S.mode = 'local'; readLocal(); recompute();
+  if (!storageListener){
+    storageListener = true;
+    /* Another tab on this device saved. If this person was removed there, they are logged out here too. */
+    window.addEventListener('storage', e => {
+      if (S.mode !== 'local' || (e.key !== LS_KEY && e.key !== null)) return;
+      readLocal();
+      if (S.me && !activeUsers().some(u => u.id === S.me.id)){ logout(); return; }
+      onData();
+    });
+  }
+}
+const activeUsers = () => S.users.filter(u => !u.fjernet).sort((a, b) => (b.sjef - a.sjef) || a.navn.localeCompare(b.navn, 'nb'));
+function nameTaken(navn){ const k = navn.toLowerCase(); return activeUsers().some(u => u.navn.toLowerCase() === k); }
+/* The PIN keeps others from logging in as the manager in the app. It is stored as a salted hash, but anyone with access to this device can still read the data in the browser. */
+function hash53(str, seed){
+  let h1 = 0xdeadbeef ^ seed, h2 = 0x41c6ce57 ^ seed;
+  for (let i = 0; i < str.length; i++){ const ch = str.charCodeAt(i); h1 = Math.imul(h1 ^ ch, 2654435761); h2 = Math.imul(h2 ^ ch, 1597334677); }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+  return 4294967296 * (2097151 & h2) + (h1 >>> 0);
+}
+function pinHash(pin, salt){ let h = 0; for (let k = 0; k < 2000; k++) h = hash53(`${salt}:${pin}:${h}`, k); return h.toString(36); }
+function newPin(pin){ const salt = genId(); return {salt, hash: pinHash(pin, salt)}; }
+function pinOk(u, pin){ return !!(u && u.pin && pinHash(pin, u.pin.salt) === u.pin.hash); }
+function saveLocal(next){ writeLocal(next); applyLocal(); recompute(); }
+function createStore(butikk, navn, pin){
+  const sjef = {id: genId(), navn, sjef: true, pin: newPin(pin), fjernet: false};
+  const op = LOCAL.oppsett ? {...LOCAL.oppsett} : clone(DEFAULT_SETTINGS);
+  if (butikk) op.butikk = butikk;
+  saveLocal({...LOCAL, oppsett: op, brukere: [...LOCAL.brukere, sjef]});
+  return sjef;
+}
+function backupText(){ return JSON.stringify({...LOCAL, lagret: now().str}, null, 2) + '\n'; }
+function parseBackup(txt){
+  let obj = null;
+  try { obj = JSON.parse(txt); } catch (e) { return null; }
+  if (!obj || obj.app !== '4CAST' || obj.versjon !== 2) return null;
+  const n = normLocal(obj);
+  return n.brukere.some(u => u.sjef && !u.fjernet) ? n : null;
+}
+function resetLocal(){ try { localStorage.removeItem(LS_KEY); } catch (e) { /* ignore */ } LOCAL = emptyLocal(); applyLocal(); recompute(); }
+
+/* ================= Demo data and simulation ================= */
+const DEMO_USERS = [
+  {id: 'demo-jonas', navn: 'Jonas Berg', sjef: true},
+  {id: 'demo-sara', navn: 'Sara Ahmadi', sjef: false},
+  {id: 'demo-ali', navn: 'Ali Hassan', sjef: false},
+  {id: 'demo-maja', navn: 'Maja Olsen', sjef: false}
+];
+function mulberry32(a){ return function(){ a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const HOURS_P = [0,0,0,0,0,0,0,1,1.5,2,2.5,3,3.5,3.5,4,5,6.5,7,6,4.5,4,3.5,2.5,0];
+const HOURS_SCO = [0,0,0,0,0,0,0,1,1.2,1.5,2,2.5,3,3,3.5,5,8,9,8,6,5,4,3,0];
+const THEFT_P = {selvbetjening: .6, kasse: .55, inngang: .75};
+const DESC = {
+  selvbetjening: ['Skannet færre varer enn det som lå i posen.', 'Varer ble lagt rett i posen uten å bli skannet.', 'Gikk ut uten å betale for kjøttvarene i kurven.', 'Feilmelding på kassen, men varene ble tatt med ut.', 'Veide dyr frukt som billig løsvekt.'],
+  kasse: ['Varer lå under handlevogna og ble ikke betalt.', 'Betalte for én pakke, men hadde med to.', 'Varer gjemt i jakka ved kassen.'],
+  inngang: ['Alarmen gikk i utgangen, varene ble tatt med ut.', 'Løp ut med en full kurv.', 'Gikk inn utgangen og rett til kjølen, ut igjen uten å betale.'],
+  hygiene: ['Tom eske etter barberblad funnet bak hylla.', 'Sikringsbrikke funnet på gulvet ved sminken.', 'Flere pakker tannbørster borte siden i morges.', 'Åpnet emballasje etter ansiktskrem i hylla.'],
+  kjott: ['To pakker entrecôte borte, ingen salg registrert.', 'Tom emballasje etter spekeskinke funnet i frysedisken.', 'Kjøttpakker mangler fra kjøledisken.'],
+  torr: ['Seks pakker kaffe mangler fra hylla siden åpning.', 'Tom kaffepose funnet bak hermetikken.', 'Morsmelkerstatning borte fra hylla, ikke solgt.'],
+  drikke: ['Energidrikker tatt fra kjøleskapet og drukket i butikken.', 'Tomme bokser funnet ved kjøledisken.'],
+  snacks: ['Godteri spist i butikken, posen lagt igjen i hylla.', 'Flere sjokolader borte fra hyllekanten.'],
+  meieri: ['Ost mangler fra hylla, ikke solgt i følge kassen.', 'Åpnet ostepakke funnet bak melka.'],
+  frukt: ['Bær spist og kurven lagt igjen.', 'Mye frukt borte fra kassene på kort tid.'],
+  brod: ['Brødposer åpnet og brød tatt.'],
+  frys: ['Tom eske etter iskrem funnet i frysedisken.'],
+  _: ['Varer mangler uten forklaring.', 'Mange varer borte fra samme hylle.']
+};
+const CMT_B = ['Bekreftet. Anmeldt til politiet.', 'Stemmer med varetellingen.', 'Bekreftet på kameraopptak.', 'Bekreftet. Takk for at du sa fra.', 'Varene ble ikke betalt, sjekket mot kassen.'];
+const CMT_I = ['Varene var flyttet til lageret.', 'Kunden hadde betalt ved betjent kasse.', 'Feil i varetellingen, ingenting mangler.', 'Fant ingen avvik ved kontroll.', 'Kunne ikke bekreftes, men bra at du registrerte.'];
+const MSGS = [
+  'Takk for alle registreringene. Det var flest hendelser ved selvbetjeningen på ettermiddagen, så vær ekstra til stede der mellom 16 og 19 neste uke.',
+  'Rolig uke. Husk å registrere mistanker også, selv om dere er usikre.',
+  'Vi fant flere tomme esker i kosmetikk. Se etter emballasje når dere rydder der.',
+  'Flere av mistankene ble bekreftet denne uka, og to saker er anmeldt. Bra jobba.',
+  'Husk at ingen skal holde igjen eller løpe etter noen. Si fra til meg i stedet.',
+  'Kaffe forsvinner fortsatt fra tørrvarehylla. Ta en ekstra runde der før stenging.'
+];
+function simulate(o){
+  const rnd = mulberry32(o.seed || 1);
+  const pick = w => { const e = Object.entries(w).filter(([, v]) => v > 0); let r = rnd() * e.reduce((a, [, v]) => a + v, 0); for (const [k, v] of e){ if ((r -= v) < 0) return k; } return e[e.length - 1][0]; };
+  const poisson = l => { const L = Math.exp(-l); let k = 0, p = 1; do { k++; p *= rnd(); } while (p > L); return k - 1; };
+  const steder = o.steder || DEFAULT_SETTINGS.steder, users = o.users || ['demo-sara', 'demo-ali', 'demo-maja'], reviewer = o.reviewer || 'demo-jonas';
+  const wdW = o.wdW || [1, .9, 1, 1.1, 1.4, 1.5, .7];
+  const nowMin = o.nowHour * 60 + o.nowMinute;
+  const hendelser = [], vurderinger = []; let n = 0;
+  for (let day = o.today - o.weeks * 7 + 1; day <= o.today; day++){
+    const wd = weekdayOf(day);
+    if (o.closedSunday !== false && wd === 6) continue;
+    const k = poisson((typeof o.rateFn === 'function' ? o.rateFn(day) : o.perWeek) * wdW[wd] / 6.9);
+    for (let j = 0; j < k; j++){
+      const sted = pick(o.locW);
+      const pr = sted === 'selvbetjening' ? HOURS_SCO : HOURS_P, hw = {};
+      for (let h = 7; h < 23; h++) hw[h] = pr[h];
+      const hour = +pick(hw);
+      if (day === o.today && hour * 60 > nowMin - 5) continue;
+      const minute = day === o.today && hour === o.nowHour ? Math.floor(rnd() * Math.max(1, o.nowMinute - 4)) : Math.floor(rnd() * 60);
+      const type = rnd() < (THEFT_P[sted] != null ? THEFT_P[sted] : .3) ? 'tyveri' : 'mistenkt';
+      const pool = DESC[sted] || DESC._;
+      const beskrivelse = rnd() < (o.descP == null ? .85 : o.descP) ? pool[Math.floor(rnd() * pool.length)] : '';
+      const av = users[Math.floor(rnd() * users.length)];
+      let reg = hour * 60 + minute + 2 + Math.floor(rnd() * 60);
+      if (reg > 23 * 60 + 59) reg = 23 * 60 + 59;
+      if (day === o.today) reg = Math.min(reg, nowMin);
+      const s = steder.find(x => x.id === sted);
+      const id = `sim${o.seed || 1}-${++n}`;
+      hendelser.push({id, data: {type, sted, stedNavn: s ? s.navn : sted, tid: `${dateOf(day)}T${pad(hour)}:${pad(minute)}`, beskrivelse, av, registrert: `${dateOf(day)}T${pad(Math.floor(reg / 60))}:${pad(reg % 60)}`}});
+      if (o.today - day >= (o.reviewAfter == null ? 2 : o.reviewAfter) && rnd() < (o.reviewP == null ? .96 : o.reviewP)){
+        const conf = rnd() < (type === 'tyveri' ? (o.confT == null ? .7 : o.confT) : (o.confM == null ? .35 : o.confM));
+        const rDay = Math.min(o.today, day + 1 + Math.floor(rnd() * 2));
+        let rMin = (8 + Math.floor(rnd() * 8)) * 60 + Math.floor(rnd() * 60);
+        if (rDay === o.today) rMin = Math.min(rMin, nowMin);
+        const pool2 = conf ? CMT_B : CMT_I;
+        vurderinger.push({id, data: {resultat: conf ? 'bekreftet' : 'ikke', kommentar: rnd() < (o.commentP == null ? .65 : o.commentP) ? pool2[Math.floor(rnd() * pool2.length)] : '',
+          av: reviewer, tid: `${dateOf(rDay)}T${pad(Math.floor(rMin / 60))}:${pad(rMin % 60)}`, hendelseAv: av}});
+      }
+    }
+  }
+  return {hendelser, vurderinger};
+}
+const DEMO_LOCW = {selvbetjening: 30, hygiene: 16, kjott: 11, torr: 10, drikke: 8, snacks: 8, inngang: 6, kasse: 5, meieri: 3, frukt: 1, brod: 1, frys: 1};
+/* Builds the demo store. Reports are added after the incidents are loaded, so their numbers come from the same data. */
+const DEMO_RECENT = [
+  {ago: 40, type: 'tyveri', sted: 'selvbetjening', beskrivelse: 'Skannet færre varer enn det som lå i posen.', av: 'demo-sara'},
+  {ago: 20 * 60, type: 'mistenkt', sted: 'hygiene', beskrivelse: 'Tom eske etter barberblad funnet bak hylla.', av: 'demo-ali'},
+  {ago: 22 * 60 + 30, type: 'tyveri', sted: 'inngang', beskrivelse: 'Alarmen gikk i utgangen, varene ble tatt med ut.', av: 'demo-maja'},
+  {ago: 26 * 60, type: 'mistenkt', sted: 'torr', beskrivelse: 'Seks pakker kaffe mangler fra hylla siden åpning.', av: 'demo-sara'}
+];
+function loadDemo(){
+  const t = now();
+  const sim = simulate({seed: 4207, today: t.day, nowHour: t.hour, nowMinute: t.minute, weeks: 12, perWeek: 9, locW: DEMO_LOCW, reviewP: 1});
+  /* A few fresh, unreviewed incidents so the manager's home page always has something to look at. */
+  const nowMin = t.day * 1440 + t.hour * 60 + t.minute;
+  DEMO_RECENT.forEach((r, k) => {
+    let m = nowMin - r.ago, day = Math.floor(m / 1440), hour = Math.floor((m % 1440) / 60), minute = m % 60;
+    if (hour < 8 || hour >= 22){ day = hour < 8 ? day - 1 : day; hour = 21; minute = 10 + k * 7; }
+    const tid = `${dateOf(day)}T${pad(hour)}:${pad(minute)}`, regMin = Math.min(nowMin, day * 1440 + hour * 60 + minute + 4);
+    const s = DEFAULT_SETTINGS.steder.find(x => x.id === r.sted);
+    sim.hendelser.push({id: 'demo-ny-' + k, data: {type: r.type, sted: r.sted, stedNavn: s.navn, tid, beskrivelse: r.beskrivelse, av: r.av,
+      registrert: `${dateOf(Math.floor(regMin / 1440))}T${pad(Math.floor((regMin % 1440) / 60))}:${pad(regMin % 60)}`}});
+  });
+  S.raw = {hendelser: sim.hendelser, vurderinger: sim.vurderinger, rapporter: [], oppsett: {...clone(DEFAULT_SETTINGS), butikk: 'Demobutikken', plan: templatePlan(DEFAULT_SETTINGS)}, status: null};
+  recompute();
+  const mon = mondayOf(t.day);
+  for (let k = 2; k <= 6; k++){
+    const wid = weekIdOf(mon - 7 * k);
+    S.raw.rapporter.push({id: wid, data: {uke: wid, tall: reportData(wid), melding: MSGS[k % MSGS.length], publisert: `${dateOf(mon - 7 * k + 7)}T09:${pad(10 + k)}`, av: 'demo-jonas'}});
+  }
+  recompute();
+  const latest = S.reports[0], older = S.reports[1];
+  MEM_STATUS = {
+    'demo-sara': {rapporterSett: older ? older.publisert : '', mineSett: `${dateOf(t.day - 5)}T12:00`},
+    'demo-ali': {rapporterSett: latest ? latest.publisert : '', mineSett: t.str},
+    'demo-maja': {}
+  };
+}
+
+/* ================= Rendering helpers ================= */
+function note(kind, html, ic){ return `<div class="note ${kind}">${icon(ic || (kind === 'warn' || kind === 'err' ? 'alert' : 'info'))}<p>${html}</p></div>`; }
+function setHTML(el, html){ if (el && el.innerHTML !== html) el.innerHTML = html; }
+function contentWidth(){ const m = $('#main'); const p = 2 * (window.innerWidth < 900 || role() !== 'sjef' ? 16 : 32); return Math.max(240, Math.round(Math.min(1040, (m ? m.clientWidth : 800) - p) - 42)); }
+let toastT = null;
+function toast(msg){ const t = $('#toast'); t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => { t.hidden = true; }, 3500); }
+function reportError(e){ if (window.__fcErrors) window.__fcErrors.push(String(e && e.stack || e)); if (window.console) console.error(e); }
+function counter(len, max){ return `${len} av ${max} tegn`; }
+function plural(n, one, many){ return `${n} ${n === 1 ? one : many}`; }
+function displayName(){ return S.me && S.me.name ? S.me.name : (S.me && S.me.sjef ? 'Butikksjef' : 'Ansatt'); }
+
+function renderChrome(){
+  const r = role();
+  document.body.dataset.role = r;
+  const pend = r === 'sjef' ? S.inc.filter(i => i.res === 'venter').length : 0;
+  const nRes = r === 'ansatt' ? newResultCount() : 0;
+  const nRep = r === 'ansatt' && hasNewReport();
+  const nav = r === 'sjef' ? [
+    {id:'hjem', label:'Hjem', icon:'home', badge: pend},
+    {id:'logg', label:'Logg', icon:'list'},
+    {id:'statistikk', label:'Statistikk', icon:'chart'},
+    {id:'rapporter', label:'Rapporter', icon:'doc'},
+    {id:'innstillinger', label:'Innstillinger', icon:'sliders'}
+  ] : r === 'ansatt' ? [
+    {id:'registrer', label:'Registrer', icon:'plus'},
+    {id:'mine', label:'Mine', icon:'inbox', dot: nRes > 0, dotText: nRes === 1 ? '1 nytt resultat' : `${nRes} nye resultater`},
+    {id:'rapporter', label:'Rapporter', icon:'doc', dot: nRep, dotText: 'ny rapport'}
+  ] : [];
+  const curView = S.view === 'plantegning' ? 'innstillinger' : S.view;
+  const cur = id => id === curView ? ' aria-current="page"' : '';
+  const mark = n => n.badge ? `<span class="nbadge"><span aria-hidden="true">${n.badge}</span><span class="sr-only">, ${n.badge} ${n.badge === 1 ? 'ny' : 'nye'}</span></span>` : n.dot ? `<span class="ndot"><span class="sr-only">, ${n.dotText}</span></span>` : '';
+  setHTML($('#sideNav'), r === 'sjef' ? `<ul>${nav.map(n => `<li><a href="#${n.id}"${cur(n.id)}>${icon(n.icon)}<span>${n.label}</span>${mark(n)}</a></li>`).join('')}</ul>` : '');
+  setHTML($('#bottomNav'), nav.map(n => `<a href="#${n.id}"${cur(n.id)}><span class="bn-i">${icon(n.icon)}${mark(n)}</span><span>${n.label}</span></a>`).join(''));
+  $('#bottomNav').hidden = !nav.length;
+  const sn = S.settings.butikk ? esc(S.settings.butikk) : '';
+  setHTML($('#storeSide'), sn); setHTML($('#storeTop'), sn);
+  const out = S.me ? `<button type="button" class="btn btn-secondary btn-sm" data-act="logout">${icon('logout')}Logg ut</button>` : '';
+  const who = S.me ? `<span class="who"><span class="avatar" aria-hidden="true">${esc(initials(displayName()))}</span><span><b>${esc(displayName())}</b><small>${r === 'sjef' ? 'Butikksjef' : S.viewAs ? 'Butikksjef, ser som ansatt' : 'Ansatt'}</small></span></span>` : '';
+  setHTML($('#sideUser'), who + out);
+  setHTML($('#topUser'), S.me ? `<span class="avatar" title="${esc(displayName())}" aria-hidden="true">${esc(initials(displayName()))}</span><span class="sr-only">Logget inn som ${esc(displayName())}</span>${out}` : '');
+  const back = backTarget();
+  const bk = back ? `<button type="button" class="back" data-act="back">${icon('back')}<span>Tilbake</span> <span class="sr-only">til ${esc(VIEW_NAMES[back.v])}</span></button>` : '';
+  for (const el of [$('#backTop'), $('#backMain')]){ setHTML(el, bk); el.hidden = !back; }
+  $('.topbar').classList.toggle('has-back', !!back);
+  let b = '';
+  if (MODE === 'demo') b += note('info', '<b>Demo med simulerte data.</b> Ingenting lagres.');
+  if (S.viewAs === 'ansatt') b += `<div class="note info">${icon('info')}<p>Du ser appen slik en ansatt ser den. <button type="button" class="linkbtn" data-act="preview-off">Tilbake til butikksjef</button></p></div>`;
+  if (S.me && !S.ready) b += note('info', 'Henter data …');
+  if (S.me && S.ready && !S.canWrite) b += note('warn', '<b>Du har bare lesetilgang.</b> Be butikksjefen om tilgang til å registrere.');
+  if (S.notice) b += note('err', esc(S.notice));
+  setHTML($('#banner'), b);
+  setHTML($('#foot'), [['om', 'Om 4CAST'], ['personvern', 'Personvern og informasjonskapsler'], ['vilkar', 'Vilkår for bruk']].map(([id, l]) => `<a href="#${id}"${cur(id)}>${l}</a>`).join(''));
+}
+
+/* ================= Login and logged-out screens ================= */
+function renderLogin(){
+  $('#v-login').innerHTML = `<div class="login">${LOGO}<h1 id="h-login" tabindex="-1">4CAST</h1>${S.settings.butikk ? `<p class="muted" style="margin:0">${esc(S.settings.butikk)}</p>` : ''}
+    <h2>Logg inn</h2>
+    <p class="small muted" style="margin:0">Dette er en demo uten passord. Velg hvem du vil logge inn som for å se appen fra deres side.</p>
+    <ul class="user-list">${DEMO_USERS.map(u => `<li><button type="button" class="user-card" data-act="login" data-id="${u.id}"><span class="avatar" aria-hidden="true">${esc(initials(u.navn))}</span><span><b>${esc(u.navn)}</b><small>${u.sjef ? 'Butikksjef' : 'Ansatt'}</small></span>${icon('arrow')}</button></li>`).join('')}</ul></div>`;
+}
+function renderUte(){
+  let msg = '<p>4CAST får ikke lagre data i denne nettleseren. Det skjer for eksempel i privat modus, eller når lagring er slått av for nettstedet.</p><p class="small muted">Åpne 4CAST i et vanlig nettleservindu, eller tillat lagring for nettstedet, og last inn siden på nytt.</p>';
+  $('#v-ute').innerHTML = `<div class="login">${LOGO}<h1 id="h-ute" tabindex="-1">4CAST</h1><div class="card">${msg}</div></div>`;
+}
+
+/* Local version: the manager sets up the store once on this device. After that everyone logs in by choosing their name, and the manager also types a PIN. */
+function renderLoginLocal(){
+  const users = activeUsers(), pick = S.ui.pinFor ? users.find(u => u.id === S.ui.pinFor && u.sjef) : null;
+  let h = `<div class="login">${LOGO}<h1 id="h-login" tabindex="-1">4CAST</h1>${S.settings.butikk ? `<p class="muted" style="margin:0">${esc(S.settings.butikk)}</p>` : ''}`;
+  if (pick){
+    h += `<h2>Logg inn som ${esc(pick.navn)}</h2>
+      <form id="pinForm" class="card" novalidate>
+        <div class="field" style="margin:0 0 14px"><label for="pin">PIN-kode</label>
+          <p class="field-error" id="err-pin" hidden></p>
+          <input type="password" id="pin" class="w-sm" inputmode="numeric" maxlength="8" autocomplete="off" aria-describedby="err-pin" data-fk="pin"></div>
+        <div class="btn-row"><button type="submit" class="btn btn-primary">Logg inn</button><button type="button" class="btn btn-secondary" data-act="pin-avbryt">Avbryt</button></div>
+      </form>
+      ${S.ui.forgot ? resetHTML('glemt') : '<p class="small" style="margin:0"><button type="button" class="linkbtn" data-act="pin-glemt">Glemt PIN-koden?</button></p>'}`;
+  } else {
+    h += `<h2>Logg inn</h2><p class="small muted" style="margin:0">Velg navnet ditt.</p>
+      <ul class="user-list">${users.map(u => `<li><button type="button" class="user-card" data-act="login" data-id="${esc(u.id)}" data-fk="u-${esc(u.id)}"><span class="avatar" aria-hidden="true">${esc(initials(u.navn))}</span><span><b>${esc(u.navn)}</b><small>${u.sjef ? 'Butikksjef, logger inn med PIN-kode' : 'Ansatt'}</small></span>${icon('arrow')}</button></li>`).join('')}</ul>
+      <p class="small muted" style="margin:0">Står du ikke på listen? Be butikksjefen legge deg til under Innstillinger.</p>`;
+  }
+  $('#v-login').innerHTML = h + '</div>';
+}
+function renderOppstart(){
+  if (!$('#oppstartForm')) $('#v-oppstart').innerHTML = `<div class="login">${LOGO}<h1 id="h-oppstart" tabindex="-1">Kom i gang med 4CAST</h1>
+    <p style="margin:0">Fyll inn butikken og navnet ditt. Du blir butikksjef, og legger til de ansatte etterpå under Innstillinger.</p>
+    ${note('info', '4CAST lagrer alt i denne nettleseren, på denne enheten. Ingenting sendes til en server, så alle som skal bruke appen, må bruke den samme enheten. <a href="#personvern">Les om personvern</a>')}
+    <form id="oppstartForm" class="card" novalidate>
+      <div id="errSummaryO" class="error-summary" tabindex="-1" hidden></div>
+      <div class="field"><label for="o-butikk">Navn på butikken <span class="muted" style="font-weight:400">(valgfritt)</span></label><input type="text" id="o-butikk" maxlength="60" autocomplete="organization"></div>
+      <div class="field"><label for="o-navn">Ditt navn</label><p class="hint" id="o-navn-h">Vises for de ansatte.</p><p class="field-error" id="err-onavn" hidden></p>
+        <input type="text" id="o-navn" maxlength="${NAME_MAX}" autocomplete="name" aria-describedby="o-navn-h err-onavn"></div>
+      <div class="field"><label for="o-pin">Velg en PIN-kode</label><p class="hint" id="o-pin-h">4 til 8 sifre. Du trenger den når du logger inn som butikksjef, og den kan ikke hentes tilbake hvis du glemmer den.</p><p class="field-error" id="err-opin" hidden></p>
+        <input type="password" id="o-pin" class="w-sm" inputmode="numeric" maxlength="8" autocomplete="off" aria-describedby="o-pin-h err-opin"></div>
+      <div class="field"><label for="o-pin2">Gjenta PIN-koden</label><p class="field-error" id="err-opin2" hidden></p>
+        <input type="password" id="o-pin2" class="w-sm" inputmode="numeric" maxlength="8" autocomplete="off" aria-describedby="err-opin2"></div>
+      <button type="submit" class="btn btn-primary btn-lg btn-block">Opprett butikken</button>
+    </form>
+    <div id="restoreBox"></div></div>`;
+  setHTML($('#restoreBox'), restoreHTML('oppstart'));
+}
+function resetHTML(where){
+  const ok = S.ui.resetText.trim().toUpperCase() === 'NULLSTILL';
+  const intro = where === 'glemt' ? 'PIN-koden kan ikke hentes tilbake. Den eneste løsningen er å nullstille 4CAST på denne enheten og sette opp butikken på nytt.' : 'Sletter alt som er lagret i 4CAST i denne nettleseren. Last ned en sikkerhetskopi først hvis du vil ta vare på dataene.';
+  return `<section class="card" aria-labelledby="resetH-${where}"><h2 class="ch" id="resetH-${where}" tabindex="-1">${where === 'glemt' ? 'Glemt PIN-koden?' : 'Nullstill 4CAST'}</h2>
+    <p class="sub">${intro} Alle hendelser, vurderinger, rapporter, innstillinger og brukere blir slettet.</p>
+    <div class="field" style="margin:0 0 10px"><label for="reset-${where}">Skriv NULLSTILL for å bekrefte</label><input type="text" id="reset-${where}" class="w-sm" autocomplete="off" value="${esc(S.ui.resetText)}" data-act-input="reset" data-fk="reset-${where}"></div>
+    <button type="button" class="btn btn-danger" data-act="nullstill"${ok ? '' : ' disabled'}>${icon('trash')}Nullstill 4CAST</button></section>`;
+}
+function restoreHTML(where){
+  const r = S.ui.restore;
+  let h = `<section class="card" aria-labelledby="restH-${where}"><h2 class="ch" id="restH-${where}" tabindex="-1">${where === 'oppstart' ? 'Har du en sikkerhetskopi?' : 'Hent inn en sikkerhetskopi'}</h2>`;
+  if (r && r.ok){
+    const c = r.counts;
+    h += `<p class="sub">«${esc(r.file)}» har ${plural(c.hendelser, 'hendelse', 'hendelser')}, ${plural(c.rapporter, 'rapport', 'rapporter')} og ${plural(c.brukere, 'bruker', 'brukere')}. ${where === 'oppstart' ? 'Butikken blir satt opp slik den var.' : 'Alt som ligger i 4CAST på denne enheten nå, blir erstattet.'} Etterpå logger du inn på nytt.</p>
+      <div class="btn-row"><button type="button" class="btn btn-primary" data-act="restore-ja" data-fk="restore-ja">Hent inn sikkerhetskopien</button><button type="button" class="btn btn-secondary" data-act="restore-nei">Avbryt</button></div>`;
+  } else {
+    h += `<p class="sub">${where === 'oppstart' ? 'Har du brukt 4CAST på en annen enhet, kan du hente inn sikkerhetskopien derfra i stedet for å starte på nytt.' : 'Bruk en sikkerhetskopi du har lastet ned fra 4CAST tidligere.'}</p>
+      <div class="field" style="margin:0"><label for="restore-${where}">Velg filen med sikkerhetskopien</label>${r ? `<p class="field-error" id="err-restore-${where}">${icon('alert')}<span>${esc(r.msg)}</span></p>` : ''}
+        <input type="file" id="restore-${where}" accept=".json,application/json" data-act-input="restore"${r ? ` aria-describedby="err-restore-${where}" aria-invalid="true"` : ''}></div>`;
+  }
+  return h + '</section>';
+}
+function fieldErr(id, msg, input){
+  const p = $('#' + id); if (!p) return;
+  if (msg){ p.innerHTML = icon('alert') + `<span>${esc(msg)}</span>`; p.hidden = false; } else { p.hidden = true; p.innerHTML = ''; }
+  if (input){ if (msg) input.setAttribute('aria-invalid', 'true'); else input.removeAttribute('aria-invalid'); }
+}
+function submitOppstart(){
+  if (S.mode !== 'local' || activeUsers().length) return;
+  const nEl = $('#o-navn'), pEl = $('#o-pin'), p2El = $('#o-pin2');
+  const navn = cleanLine(nEl.value, NAME_MAX), butikk = cleanLine($('#o-butikk').value, 60), pin = pEl.value, pin2 = p2El.value;
+  const e1 = navn ? '' : 'Skriv inn navnet ditt';
+  const e2 = PIN_RE.test(pin) ? '' : 'PIN-koden må være 4 til 8 sifre';
+  const e3 = e2 ? '' : !pin2 ? 'Skriv PIN-koden en gang til' : pin2 !== pin ? 'PIN-kodene er ikke like' : '';
+  fieldErr('err-onavn', e1, nEl); fieldErr('err-opin', e2, pEl); fieldErr('err-opin2', e3, p2El);
+  const errs = [[e1, 'o-navn'], [e2, 'o-pin'], [e3, 'o-pin2']].filter(x => x[0]), sum = $('#errSummaryO');
+  if (errs.length){
+    sum.innerHTML = `<h2>Rett opp ${errs.length === 1 ? 'dette' : 'disse punktene'} først</h2><ul>${errs.map(x => `<li><a href="#${x[1]}" data-focus="${x[1]}">${esc(x[0])}</a></li>`).join('')}</ul>`;
+    sum.hidden = false; sum.focus(); return;
+  }
+  sum.hidden = true;
+  let u = null;
+  try { u = createStore(butikk, navn, pin); }
+  catch (err) { sum.innerHTML = `<h2>Butikken ble ikke opprettet</h2><p style="margin:0">${esc(errText(err))}</p>`; sum.hidden = false; sum.focus(); return; }
+  toast('Butikken er opprettet');
+  login(u);
+}
+function submitPin(){
+  const u = activeUsers().find(x => x.id === S.ui.pinFor && x.sjef), inp = $('#pin');
+  if (!u || !inp) return;
+  if (!inp.value){ fieldErr('err-pin', 'Skriv inn PIN-koden', inp); inp.focus(); return; }
+  if (!pinOk(u, inp.value)){ inp.value = ''; fieldErr('err-pin', 'Feil PIN-kode. Prøv igjen.', inp); inp.focus(); return; }
+  login(u);
+}
+
+/* ================= Registrer (employees, and the manager when needed) ================= */
+function opt(name, value, title, desc){
+  const id = `${name}-${value}`;
+  return `<label class="opt" for="${id}"><input type="radio" name="${name}" id="${id}" value="${esc(value)}"><span><b>${esc(title)}</b>${desc ? `<small>${esc(desc)}</small>` : ''}</span></label>`;
+}
+let regSig = '';
+function buildRegistrer(){
+  $('#v-registrer').innerHTML = `
+    <header class="vhead"><h1 id="h-registrer" tabindex="-1">Registrer hendelse</h1>
+      <p>Si fra om tyveri eller mistanke om tyveri. Butikksjefen ser gjennom alt som registreres.</p></header>
+    <div id="regNotices"></div>
+    <div class="card">
+      <div id="regDone" class="done" hidden></div>
+      <div id="regLocked" hidden></div>
+      <form id="regForm" novalidate>
+        <div id="errSummary" class="error-summary" tabindex="-1" hidden></div>
+        <fieldset class="plain" id="regAll">
+          <fieldset id="fs-type" aria-describedby="err-type">
+            <legend>1. Hva skjedde?</legend>
+            <p class="field-error" id="err-type" hidden></p>
+            <div class="opt-grid two">
+              ${opt('type', 'tyveri', 'Tyveri', 'Du så at varer ble tatt uten å bli betalt.')}
+              ${opt('type', 'mistenkt', 'Mistenkt tyveri', 'Du fant tegn på tyveri, for eksempel tom emballasje.')}
+            </div>
+          </fieldset>
+          <fieldset id="fs-sted" aria-describedby="err-sted">
+            <legend>2. Hvor skjedde det?</legend>
+            <p class="field-error" id="err-sted" hidden></p>
+            <div class="opt-grid" id="stedOpts"></div>
+          </fieldset>
+          <fieldset id="fs-naar" aria-describedby="err-naar">
+            <legend>3. Når skjedde det?</legend>
+            <p class="field-error" id="err-naar" hidden></p>
+            <div class="opt-row">${opt('naar', 'na', 'Akkurat nå')}${opt('naar', 'idag', 'Tidligere i dag')}${opt('naar', 'annen', 'En annen dag')}</div>
+            <div class="subfields" id="sub-idag" hidden><div><label for="tid-idag">Klokkeslett</label><input type="time" id="tid-idag" aria-describedby="err-naar"></div></div>
+            <div class="subfields" id="sub-annen" hidden>
+              <div><label for="dato-annen">Dato</label><input type="date" id="dato-annen" aria-describedby="err-naar"></div>
+              <div><label for="tid-annen">Klokkeslett</label><input type="time" id="tid-annen" aria-describedby="err-naar"></div>
+            </div>
+          </fieldset>
+          <div class="field">
+            <label class="q-label" for="beskrivelse">4. Kort beskrivelse <span class="muted" style="font-weight:400">(valgfritt)</span></label>
+            <p class="field-error" id="err-beskr" hidden></p>
+            <textarea id="beskrivelse" rows="3" maxlength="${DESC_MAX}" aria-describedby="beskr-count err-beskr"></textarea>
+            <p class="counter" id="beskr-count">${counter(0, DESC_MAX)}</p>
+          </div>
+          <button type="submit" class="btn btn-primary btn-lg btn-block" id="regSubmit">Send til butikksjefen</button>
+          <p class="safety">${icon('shield')}<span>Din sikkerhet går foran varene. Ikke løp etter eller hold igjen noen. Ring 112 ved vold eller trusler.</span></p>
+        </fieldset>
+      </form>
+    </div>`;
+  regSig = '';
+}
+function radioVal(name){ const el = $(`#regForm input[name="${name}"]:checked`); return el ? el.value : ''; }
+function updateRegOptions(){
+  const sig = JSON.stringify(S.settings.steder);
+  if (sig === regSig) return;
+  regSig = sig;
+  const cur = radioVal('sted');
+  $('#stedOpts').innerHTML = S.settings.steder.map(s => opt('sted', s.id, s.navn)).join('');
+  if (cur){ const el = $(`#sted-${CSS.escape(cur)}`); if (el) el.checked = true; }
+}
+function renderRegistrer(){
+  if (!$('#regForm')) buildRegistrer();
+  updateRegOptions();
+  let n = '';
+  if (role() === 'ansatt'){
+    const nr = newResultCount();
+    if (nr) n += `<div class="note info">${icon('info')}<p>Butikksjefen har vurdert ${nr === 1 ? 'en av hendelsene' : `${nr} av hendelsene`} dine. <a href="#mine">Se resultatet</a></p></div>`;
+    if (hasNewReport()){ const w = weekFromId(latestPublished().uke); n += `<div class="note info">${icon('doc')}<p>Ny ukesrapport fra butikksjefen for uke ${w.week}. <a href="#rapporter">Les rapporten</a></p></div>`; }
+  }
+  setHTML($('#regNotices'), n);
+  const locked = !S.ready || !S.canWrite;
+  $('#regAll').disabled = locked;
+  const lk = $('#regLocked');
+  if (locked && S.ready){ lk.hidden = false; setHTML(lk, note('warn', 'Du har ikke tilgang til å registrere. Be butikksjefen om tilgang.')); }
+  else lk.hidden = true;
+}
+function updateNaar(){
+  const v = radioVal('naar');
+  $('#sub-idag').hidden = v !== 'idag';
+  $('#sub-annen').hidden = v !== 'annen';
+  const t = now();
+  $('#dato-annen').max = dateOf(t.day);
+  $('#dato-annen').min = dateOf(t.day - 60);
+}
+function setErr(key, msg, inputs){
+  const p = $('#err-' + key);
+  if (msg){ p.innerHTML = icon('alert') + `<span>${esc(msg)}</span>`; p.hidden = false; } else { p.hidden = true; p.innerHTML = ''; }
+  (inputs || []).forEach(el => { if (el){ if (msg) el.setAttribute('aria-invalid', 'true'); else el.removeAttribute('aria-invalid'); } });
+}
+function validateReg(){
+  const t = now(), errs = [];
+  const type = radioVal('type'), sted = radioVal('sted'), naar = radioVal('naar');
+  const beskr = cleanLine($('#beskrivelse').value, 10000);
+  setErr('type', type ? '' : 'Velg om det var tyveri eller mistenkt tyveri');
+  if (!type) errs.push(['Velg om det var tyveri eller mistenkt tyveri', 'type-tyveri']);
+  const stedOk = !!sted && S.settings.steder.some(s => s.id === sted);
+  setErr('sted', stedOk ? '' : 'Velg avdelingen der det skjedde');
+  if (!stedOk) errs.push(['Velg avdelingen der det skjedde', S.settings.steder[0] ? 'sted-' + S.settings.steder[0].id : 'fs-sted']);
+  let tid = null, msg = '', target = 'naar-na', inputs = [];
+  const mins = v => +v.slice(0, 2) * 60 + +v.slice(3, 5);
+  if (!naar) msg = 'Velg når det skjedde';
+  else if (naar === 'na') tid = t.str;
+  else if (naar === 'idag'){
+    const v = $('#tid-idag').value; target = 'tid-idag'; inputs = [$('#tid-idag')];
+    if (!/^\d{2}:\d{2}/.test(v)) msg = 'Skriv inn klokkeslettet';
+    else if (mins(v) > t.hour * 60 + t.minute) msg = 'Klokkeslettet kan ikke være senere enn nå';
+    else tid = `${dateOf(t.day)}T${v.slice(0, 5)}`;
+  } else {
+    const d = $('#dato-annen').value, v = $('#tid-annen').value, dn = parseDate(d);
+    inputs = [$('#dato-annen'), $('#tid-annen')];
+    if (!Number.isFinite(dn)){ msg = 'Velg dato'; target = 'dato-annen'; }
+    else if (dn > t.day){ msg = 'Datoen kan ikke være frem i tid'; target = 'dato-annen'; }
+    else if (dn < t.day - 60){ msg = 'Datoen kan ikke være mer enn 60 dager tilbake'; target = 'dato-annen'; }
+    else if (!/^\d{2}:\d{2}/.test(v)){ msg = 'Skriv inn klokkeslettet'; target = 'tid-annen'; }
+    else if (dn === t.day && mins(v) > t.hour * 60 + t.minute){ msg = 'Klokkeslettet kan ikke være senere enn nå'; target = 'tid-annen'; }
+    else tid = `${d}T${v.slice(0, 5)}`;
+  }
+  setErr('naar', msg, inputs);
+  if (msg) errs.push([msg, target]);
+  const bMsg = beskr.length > DESC_MAX ? `Beskrivelsen kan ha maks ${DESC_MAX} tegn` : '';
+  setErr('beskr', bMsg, [$('#beskrivelse')]);
+  if (bMsg) errs.push([bMsg, 'beskrivelse']);
+  if (errs.length) return {errs};
+  const s = S.settings.steder.find(x => x.id === sted);
+  return {errs, doc: {type, sted, stedNavn: s.navn, tid, beskrivelse: beskr, av: S.me.id, registrert: t.str}};
+}
+async function submitReg(e){
+  e.preventDefault();
+  if (S.ui.busy || !S.canWrite || !S.me) return;
+  const {errs, doc} = validateReg();
+  const sum = $('#errSummary');
+  if (errs.length){
+    sum.innerHTML = `<h2>Rett opp ${errs.length === 1 ? 'dette' : 'disse punktene'} før du sender</h2><ul>${errs.map(x => `<li><a href="#${x[1]}" data-focus="${x[1]}">${esc(x[0])}</a></li>`).join('')}</ul>`;
+    sum.hidden = false; sum.focus(); return;
+  }
+  sum.hidden = true;
+  const btn = $('#regSubmit'); S.ui.busy = true; btn.disabled = true; btn.textContent = 'Sender …';
+  try {
+    const id = await Store.addIncident(doc);
+    S.ui.regDone = {id, doc};
+    $('#regForm').reset(); updateNaar(); $('#beskr-count').textContent = counter(0, DESC_MAX);
+    showDone(); toast('Sendt til butikksjefen');
+  } catch (err) {
+    sum.innerHTML = `<h2>Hendelsen ble ikke sendt</h2><p style="margin:0">${esc(errText(err))}</p>`; sum.hidden = false; sum.focus();
+  } finally { S.ui.busy = false; btn.disabled = false; btn.textContent = 'Send til butikksjefen'; }
+}
+function showDone(){
+  const d = S.ui.regDone; if (!d) return;
+  const doc = d.doc, today = now().day;
+  const rows = [['Hva', TYPES[doc.type]], ['Hvor', doc.stedNavn], ['Når', whenStr(doc.tid, today)]];
+  if (doc.beskrivelse) rows.push(['Beskrivelse', doc.beskrivelse]);
+  const box = $('#regDone');
+  box.innerHTML = `<h2 tabindex="-1" id="doneH"><span class="ok">${icon('check')}</span>Sendt til butikksjefen</h2>
+    <dl class="sumlist">${rows.map(r => `<div><dt>${r[0]}</dt><dd>${esc(r[1])}</dd></div>`).join('')}</dl>
+    <p class="sub">${role() === 'sjef' ? 'Hendelsen ligger under Nye hendelser på Hjem.' : 'Du ser resultatet under Mine når butikksjefen har vurdert hendelsen.'}</p>
+    <div class="btn-row"><button type="button" class="btn btn-primary" data-act="reg-ny">Registrer en til</button><button type="button" class="btn btn-secondary" data-act="reg-angre">${icon('undo')}Angre</button></div>`;
+  box.hidden = false; $('#regForm').hidden = true;
+  $('#doneH').focus();
+}
+function hideDone(){ S.ui.regDone = null; $('#regDone').hidden = true; $('#regForm').hidden = false; }
+
+/* ================= Mine (an employee's own registrations and results) ================= */
+function renderMine(){
+  const today = now().day, since = S.ui.mineSince;
+  const list = mine().slice().sort((a, b) => a.tid < b.tid ? 1 : a.tid > b.tid ? -1 : 0);
+  const wait = list.filter(i => i.res === 'venter').length;
+  let h = `<header class="vhead"><h1 id="h-mine" tabindex="-1">Mine hendelser</h1><p>Det du har registrert, og hva butikksjefen kom fram til.</p></header>`;
+  if (!list.length){ $('#v-mine').innerHTML = h + `<div class="card"><p class="sub" style="margin:0">Du har ikke registrert noe ennå. <a href="#registrer">Registrer en hendelse</a></p></div>`; return; }
+  h += `<p class="list-count" role="status">${list.length} ${list.length === 1 ? 'registrering' : 'registreringer'}${wait ? `, ${wait} venter på vurdering` : ''}.</p><ul class="list">`;
+  for (const i of list.slice(0, S.ui.mineShown)){
+    const isNew = i.rev && i.rev.tid && i.rev.tid > since;
+    h += `<li class="inc static"><div class="inc-row"><span class="inc-main"><span class="inc-title">${esc(TYPES[i.type])} · ${esc(stedName(i.sted))}</span><span class="inc-meta">${esc(whenStr(i.tid, today))}${isNew ? '<span class="newtag">Nytt resultat</span>' : ''}</span></span><span class="res ${i.res}">${RES_TAG[i.res]}</span></div>`;
+    if (i.beskrivelse) h += `<p class="inc-full">«${esc(i.beskrivelse)}»</p>`;
+    if (i.rev) h += `<div class="answer"><p><b>Butikksjefen:</b> ${i.rev.kommentar ? esc(i.rev.kommentar) : 'Ingen kommentar.'}</p>${i.rev.tid ? `<p class="small muted">Vurdert ${esc(whenStr(i.rev.tid, today).toLowerCase())}</p>` : ''}</div>`;
+    else {
+      h += '<p class="small muted" style="margin:0">Butikksjefen har ikke vurdert denne ennå.</p>';
+      if (S.canWrite) h += S.ui.confirmDel === i.id
+        ? `<div class="confirm"><span>Trekke tilbake hendelsen?</span><button type="button" class="btn btn-danger btn-sm" data-act="del-ja" data-id="${esc(i.id)}" data-fk="dj-${esc(i.id)}">Ja, trekk tilbake</button><button type="button" class="btn btn-secondary btn-sm" data-act="del-nei" data-id="${esc(i.id)}">Avbryt</button></div>`
+        : `<div><button type="button" class="linkbtn" data-act="del" data-id="${esc(i.id)}" data-fk="d-${esc(i.id)}">Trekk tilbake</button></div>`;
+    }
+    h += '</li>';
+  }
+  h += '</ul>';
+  if (list.length > S.ui.mineShown) h += `<div class="btn-row" style="margin-top:12px"><button type="button" class="btn btn-secondary" data-act="mine-flere" data-fk="mf">Vis flere</button></div>`;
+  $('#v-mine').innerHTML = h;
+}
+
+/* ================= Incident items for the manager (Hjem and Logg) ================= */
+function excerpt(s, n){ if (s.length <= n) return s; const cut = s.slice(0, n - 1); return cut.replace(/\s+\S*$/, '') + ' …'; }
+function incItem(i, today){
+  const open = S.ui.open === i.id, eid = esc(i.id);
+  let h = `<li class="inc${open ? ' open' : ''}" id="inc-${eid}"><button type="button" class="inc-head" data-act="inc-toggle" data-id="${eid}" aria-expanded="${open}"${open ? ` aria-controls="incb-${eid}"` : ''} data-fk="ih-${eid}">
+    <span class="inc-main"><span class="inc-title">${esc(TYPES[i.type])} · ${esc(stedName(i.sted))}</span><span class="inc-meta">${esc(whenStr(i.tid, today))} · ${esc(cap(nameOf(i.av)))}</span>${i.beskrivelse && !open ? `<span class="inc-desc">${esc(excerpt(i.beskrivelse, 90))}</span>` : ''}</span>
+    <span class="res ${i.res}">${RES_TAG[i.res]}</span></button>`;
+  if (open) h += `<div class="inc-body" id="incb-${eid}">${incBody(i, today)}</div>`;
+  return h + '</li>';
+}
+function incBody(i, today){
+  const eid = esc(i.id), canAct = role() === 'sjef' && S.canWrite;
+  const editing = canAct && (!i.rev || S.ui.edit === i.id);
+  let h = i.beskrivelse ? `<p class="inc-full">«${esc(i.beskrivelse)}»</p>` : '<p class="small muted" style="margin:0">Ingen beskrivelse.</p>';
+  h += `<dl class="kv"><div><dt>Skjedde</dt><dd>${esc(whenStr(i.tid, today))}</dd></div><div><dt>Registrert</dt><dd>${esc(whenStr(i.registrert, today))} av ${esc(nameOf(i.av))}</dd></div></dl>`;
+  if (editing) h += reviewForm(i);
+  else if (i.rev) h += `<div class="answer"><p><b>${RES[i.res]}</b>${i.rev.tid ? ` <span class="small muted">· vurdert ${esc(whenStr(i.rev.tid, today).toLowerCase())}</span>` : ''}</p>${i.rev.kommentar ? `<p>${esc(i.rev.kommentar)}</p>` : ''}</div>`;
+  if (canAct && !editing){
+    h += S.ui.confirmDel === i.id
+      ? `<div class="confirm"><span>Slette hendelsen for godt?</span><button type="button" class="btn btn-danger btn-sm" data-act="del-ja" data-id="${eid}" data-fk="dj-${eid}">Ja, slett</button><button type="button" class="btn btn-secondary btn-sm" data-act="del-nei" data-id="${eid}">Avbryt</button></div>`
+      : `<div class="btn-row"><button type="button" class="btn btn-secondary btn-sm" data-act="rev-edit" data-id="${eid}" data-fk="re-${eid}">Endre vurdering</button><button type="button" class="btn btn-secondary btn-sm" data-act="del" data-id="${eid}" data-fk="d-${eid}">${icon('trash')}Slett</button></div>`;
+  }
+  return h;
+}
+function reviewForm(i){
+  const eid = esc(i.id);
+  if (!S.ui.draft || S.ui.draft.id !== i.id) S.ui.draft = {id: i.id, resultat: i.rev ? i.rev.resultat : '', kommentar: i.rev ? i.rev.kommentar : ''};
+  const d = S.ui.draft;
+  const ch = (v, label) => `<label class="opt" for="rv-${v}-${eid}"><input type="radio" name="rv-${eid}" id="rv-${v}-${eid}" value="${v}"${d.resultat === v ? ' checked' : ''} data-rv="res" data-id="${eid}" data-fk="rv-${v}-${eid}"><span><b>${label}</b></span></label>`;
+  return `<form class="review" data-review="${eid}" novalidate>
+    <fieldset class="plain" aria-describedby="rv-err-${eid}"><legend class="q-label">Resultat</legend>
+      <p class="field-error" id="rv-err-${eid}" hidden></p>
+      <div class="choice">${ch('bekreftet', 'Bekreftet tyveri')}${ch('ikke', 'Ikke bekreftet')}</div></fieldset>
+    <div class="field" style="margin:8px 0 6px"><label for="rv-kom-${eid}">Kommentar <span class="muted" style="font-weight:400">(valgfritt)</span></label>
+      <p class="hint" id="rv-h-${eid}">Vises for den som registrerte hendelsen.</p>
+      <textarea id="rv-kom-${eid}" rows="2" maxlength="${COMMENT_MAX}" data-rv="kom" data-id="${eid}" data-fk="rv-kom-${eid}" aria-describedby="rv-h-${eid} rv-c-${eid}">${esc(d.kommentar)}</textarea>
+      <p class="counter" id="rv-c-${eid}">${counter(d.kommentar.length, COMMENT_MAX)}</p></div>
+    <div class="btn-row"><button type="submit" class="btn btn-primary" data-fk="rv-save-${eid}">Lagre vurdering</button><button type="button" class="btn btn-secondary" data-act="rev-cancel" data-id="${eid}">${i.rev ? 'Avbryt' : 'Lukk'}</button></div>
+  </form>`;
+}
+
+/* ================= Hjem (manager home with new incidents) ================= */
+function renderHjem(){
+  const today = now().day, pend = pending();
+  const wk = weekFromId(weekIdOf(today)), wl = inRange(S.inc, wk.from, today);
+  const prevId = weekIdOf(wk.from - 7), prev = weekFromId(prevId), prevDone = S.reports.some(r => r.uke === prevId);
+  const first = S.me && S.me.name ? S.me.name.split(/\s+/)[0] : '';
+  let h = `<header class="vhead"><h1 id="h-hjem" tabindex="-1">${first ? `Hei, ${esc(first)}` : 'Hjem'}</h1><p>${esc(cap(fDateLong(today)))}</p></header><div class="home-grid">
+    <section class="card" aria-labelledby="newH"><h2 class="ch" id="newH" tabindex="-1">Nye hendelser${pend.length ? ` <span class="nbadge"><span aria-hidden="true">${pend.length}</span><span class="sr-only">, ${pend.length} ${pend.length === 1 ? 'ny' : 'nye'}</span></span>` : ''}</h2>`;
+  if (pend.length){
+    h += `<p class="sub">Hendelser du ikke har vurdert ennå, nyeste først. Trykk på en hendelse for å vurdere den.</p><ul class="list">${pend.slice(0, S.ui.homeShown).map(i => incItem(i, today)).join('')}</ul>`;
+    if (pend.length > S.ui.homeShown) h += `<div class="btn-row" style="margin-top:12px"><button type="button" class="btn btn-secondary" data-act="home-flere" data-fk="hf">Vis flere</button></div>`;
+  } else h += `<div class="empty">${icon('check')}<p><b>Ingen nye hendelser.</b> Alt er vurdert.</p></div>`;
+  h += `</section><div class="home-side">
+    <section class="card" aria-labelledby="weekH"><h2 class="ch" id="weekH">Uke ${wk.week} så langt</h2>
+      <div class="mini-kpis"><div><b>${wl.length}</b><span>registreringer</span></div><div><b>${wl.filter(i => i.res === 'bekreftet').length}</b><span>bekreftede tyverier</span></div><div><b>${pend.length}</b><span>venter på vurdering</span></div></div>
+      <a href="#statistikk">Se statistikk</a></section>
+    <section class="card" aria-labelledby="repH"><h2 class="ch" id="repH">Ukesrapport</h2>
+      ${prevDone ? `<p class="sub" style="margin:0">Rapporten for uke ${prev.week} er publisert. <a href="#rapporter">Se rapportene</a></p>`
+        : `<p class="sub">Rapporten for uke ${prev.week} er ikke publisert ennå.</p><a class="btn btn-primary" href="#rapporter" data-act="rep-week" data-week="${prevId}">Lag rapport for uke ${prev.week}</a>`}
+    </section>
+    <a class="btn btn-secondary" href="#registrer">${icon('plus')}Registrer en hendelse</a>
+  </div></div>`;
+  $('#v-hjem').innerHTML = h;
+}
+
+/* ================= Logg (all incidents with results) ================= */
+function renderLogg(){
+  const today = now().day, P = periodRange(S.ui.logPeriod, today);
+  let base = inRange(S.inc, P.from, P.to);
+  if (S.ui.logSted !== 'alle') base = base.filter(i => i.sted === S.ui.logSted);
+  const n = r => base.filter(i => i.res === r).length;
+  const counts = {alle: base.length, venter: n('venter'), bekreftet: n('bekreftet'), ikke: n('ikke')};
+  const list = (S.ui.logRes === 'alle' ? base : base.filter(i => i.res === S.ui.logRes)).slice().sort((a, b) => a.tid < b.tid ? 1 : a.tid > b.tid ? -1 : 0);
+  const shown = list.slice(0, S.ui.logShown);
+  const stedIds = Array.from(new Set([...S.settings.steder.map(s => s.id), ...S.inc.map(i => i.sted)]));
+  const sel = (id, label, val, opts) => `<div><label for="${id}">${label}</label><select id="${id}" data-act-input="${id}" data-fk="${id}">${opts.map(([v, l]) => `<option value="${esc(v)}"${v === val ? ' selected' : ''}>${esc(l)}</option>`).join('')}</select></div>`;
+  let h = `<header class="vhead"><h1 id="h-logg" tabindex="-1">Hendelseslogg</h1><p>Alle registreringer, med resultatet etter at du har vurdert dem.</p></header>
+    <div class="toolbar">
+      ${sel('f-periode', 'Periode', S.ui.logPeriod, [['4u', 'Siste 4 uker'], ['8u', 'Siste 8 uker'], ['12u', 'Siste 12 uker'], ['aar', 'Hittil i år'], ['alt', 'Alt']])}
+      ${sel('f-sted', 'Avdeling', S.ui.logSted, [['alle', 'Alle avdelinger'], ...stedIds.map(id => [id, stedName(id)])])}
+    </div>
+    <div class="seg" role="group" aria-label="Vis resultat" style="margin-bottom:14px">${[['alle', 'Alle'], ['venter', 'Venter'], ['bekreftet', 'Bekreftet'], ['ikke', 'Ikke bekreftet']].map(([k, l]) => `<button type="button" data-act="log-res" data-v="${k}" data-fk="lr-${k}" aria-pressed="${S.ui.logRes === k}">${l} (${counts[k]})</button>`).join('')}</div>
+    <p class="list-count" role="status">${list.length ? `Viser ${shown.length} av ${list.length}.` : 'Ingen hendelser med disse valgene.'}</p>`;
+  let day = null;
+  for (const i of shown){
+    if (i.day !== day){ if (day !== null) h += '</ul>'; day = i.day; h += `<h2 class="day-h">${esc(dayLabel(i.day, today))}</h2><ul class="list">`; }
+    h += incItem(i, today);
+  }
+  if (day !== null) h += '</ul>';
+  if (list.length > shown.length) h += `<div class="btn-row" style="margin-top:12px"><button type="button" class="btn btn-secondary" data-act="log-flere" data-fk="lf">Vis 40 flere</button></div>`;
+  if (S.exportAvail) h += `<div class="btn-row" style="margin-top:20px"><button type="button" class="btn btn-secondary" data-act="csv" ${S.inc.length ? '' : 'disabled'}>${icon('download')}Last ned alt som CSV</button></div>`;
+  $('#v-logg').innerHTML = h;
+}
+
+/* ================= Charts ================= */
+const n2 = v => Math.round(v * 100) / 100;
+function niceScale(v){
+  const steps = [1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000, 2000, 2500, 5000, 10000];
+  for (const s of steps) if (Math.ceil(v / s) <= 5) return {top: Math.max(s, Math.ceil(v / s) * s), step: s};
+  const s = Math.pow(10, Math.ceil(Math.log10(v / 5))); return {top: Math.ceil(v / s) * s, step: s};
+}
+function topRound(x, y, w, h, r){ r = Math.min(r, h, w / 2); return `M${x} ${y + h}V${y + r}Q${x} ${y} ${x + r} ${y}H${x + w - r}Q${x + w} ${y} ${x + w} ${y + r}V${y + h}Z`; }
+function trendChart(bk, W){
+  const list = bk.list, n = list.length, ml = 36, mr = 10, mt = 24, mb = 30, H = 220, pw = W - ml - mr, ph = H - mt - mb;
+  const max = Math.max(1, ...list.map(b => b.b + b.i + b.v)), {top, step} = niceScale(max);
+  const y = v => mt + ph - v / top * ph, base = y(0), slot = pw / n, bw = Math.max(2, Math.min(24, slot * .62));
+  const every = Math.max(1, Math.ceil(n / Math.max(1, Math.floor(pw / 38))));
+  let g = '';
+  for (let v = 0; v <= top + 1e-9; v += step) g += `<line class="${v === 0 ? 'c-base' : 'c-grid'}" x1="${ml}" x2="${W - mr}" y1="${n2(y(v))}" y2="${n2(y(v))}"/><text class="c-tick" x="${ml - 6}" y="${n2(y(v))}" text-anchor="end" dominant-baseline="central">${fInt(v)}</text>`;
+  list.forEach((b, k) => {
+    const x = n2(ml + slot * k + (slot - bw) / 2), cx = n2(ml + slot * k + slot / 2);
+    const segs = [['c-b', b.b], ['c-i', b.i], ['c-v', b.v]].filter(s => s[1] > 0);
+    let col = '', yy = base;
+    segs.forEach((s, idx) => {
+      const gap = idx > 0 ? 2 : 0, h = Math.max(1, s[1] / top * ph - gap), yt = yy - gap - h, last = idx === segs.length - 1;
+      col += last ? `<path class="bar ${s[0]}" d="${topRound(x, n2(yt), n2(bw), n2(h), 4)}"/>` : `<rect class="bar ${s[0]}" x="${x}" y="${n2(yt)}" width="${n2(bw)}" height="${n2(h)}"/>`;
+      yy = yt;
+    });
+    if (k % every === 0 || k === n - 1) col += `<text class="c-tick" x="${cx}" y="${H - 10}" text-anchor="middle">${esc(b.short)}</text>`;
+    col += `<rect class="hit" x="${n2(ml + slot * k)}" y="${mt}" width="${n2(slot)}" height="${n2(ph)}" data-tip="${esc(b.label + (b.partial ? ' (ikke ferdig)' : ''))}|Bekreftet tyveri: ${b.b}|Ikke bekreftet: ${b.i}|Venter: ${b.v}|Totalt: ${b.b + b.i + b.v}"/>`;
+    g += `<g class="col${b.partial ? ' partial' : ''}">${col}</g>`;
+  });
+  return `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="${esc('Registreringer per ' + (bk.kind === 'uke' ? 'uke' : 'måned') + ': ' + list.map(b => `${b.label} ${b.b + b.i + b.v}`).join(', '))}">${g}</svg>`;
+}
+function heatChart(list, W){
+  let hmin = 7, hmax = 22;
+  for (const i of list){ hmin = Math.min(hmin, i.hour); hmax = Math.max(hmax, i.hour); }
+  const cols = hmax - hmin + 1, lw = 40, top = 22;
+  const cw = Math.max(12, Math.min(44, (W - lw) / cols)), ch = Math.min(30, Math.max(20, cw * .8));
+  const width = n2(lw + cols * cw), height = n2(top + 7 * ch + 2);
+  const m = Array.from({length: 7}, () => new Array(24).fill(0));
+  for (const i of list) m[i.wd][i.hour]++;
+  let max = 0; for (const r of m) for (const c of r) max = Math.max(max, c);
+  const every = cw < 22 ? 2 : 1;
+  let g = '';
+  for (let h = hmin; h <= hmax; h++) if ((h - hmin) % every === 0) g += `<text class="c-tick" x="${n2(lw + (h - hmin) * cw + cw / 2)}" y="12" text-anchor="middle">${pad(h)}</text>`;
+  for (let d = 0; d < 7; d++){
+    const yy = n2(top + d * ch);
+    g += `<text class="c-tick" x="0" y="${n2(yy + ch / 2)}" dominant-baseline="central">${WD_S[d]}</text>`;
+    for (let h = hmin; h <= hmax; h++){
+      const c = m[d][h], lvl = c === 0 ? 0 : Math.min(4, Math.max(1, Math.ceil(c / max * 4)));
+      g += `<rect class="h${lvl}" x="${n2(lw + (h - hmin) * cw)}" y="${yy}" width="${n2(cw - 2)}" height="${n2(ch - 2)}" rx="3" data-tip="${cap(WD[d])} kl. ${pad(h)}–${pad(h + 1)}|${c} ${c === 1 ? 'hendelse' : 'hendelser'}"/>`;
+    }
+  }
+  return {svg: `<svg viewBox="0 0 ${width} ${height}" width="${width}" height="${height}" role="img" aria-label="Hendelser per ukedag og time. Tallene står i tabellen under." style="max-width:${width}px">${g}</svg>`, m, hmin, hmax, max};
+}
+function barList(entries, total, nameFn, extraFn){
+  if (!entries.length) return '<p class="sub" style="margin:0">Ingen hendelser.</p>';
+  const max = entries[0][1];
+  return `<ul class="bars">${entries.map(([k, v]) => `<li><span class="bn">${esc(nameFn(k))}</span><span class="bv">${v} <em>(${fPct(pctOf(v, total))})</em>${extraFn ? extraFn(k) : ''}</span><span class="bt" aria-hidden="true"><span class="bf" style="width:${(v / max * 100).toFixed(1)}%"></span></span></li>`).join('')}</ul>`;
+}
+function zoneLevel(c, total){ if (!c) return 'none'; const share = total ? c / total : 0; if (c >= 3 && share >= .2) return 'hoy'; if (c >= 2 && share >= .1) return 'middels'; return 'lav'; }
+const LVL_TXT = {hoy: 'Høy', middels: 'Middels', lav: 'Lav', none: 'Ingen'};
+function regionsOf(plan){
+  const R = new Map();
+  plan.cells.forEach((id, i) => {
+    if (!id) return;
+    const x = i % plan.cols, y = Math.floor(i / plan.cols);
+    let r = R.get(id);
+    if (!r){ r = {id, cells: [], x0: x, x1: x, y0: y, y1: y, sx: 0, sy: 0}; R.set(id, r); }
+    r.cells.push(i); r.x0 = Math.min(r.x0, x); r.x1 = Math.max(r.x1, x); r.y0 = Math.min(r.y0, y); r.y1 = Math.max(r.y1, y); r.sx += x + .5; r.sy += y + .5;
+  });
+  for (const r of R.values()){
+    r.cx = r.sx / r.cells.length; r.cy = r.sy / r.cells.length;
+    r.rect = r.cells.length === (r.x1 - r.x0 + 1) * (r.y1 - r.y0 + 1);
+    let bd = Infinity;
+    for (const i of r.cells){ const x = i % plan.cols + .5, y = Math.floor(i / plan.cols) + .5, dd = (x - r.cx) ** 2 + (y - r.cy) ** 2; if (dd < bd){ bd = dd; r.anchor = i; } }
+    const ay = Math.floor(r.anchor / plan.cols); let a0 = r.anchor % plan.cols, a1 = a0;
+    while (a0 > 0 && plan.cells[ay * plan.cols + a0 - 1] === r.id) a0--;
+    while (a1 < plan.cols - 1 && plan.cells[ay * plan.cols + a1 + 1] === r.id) a1++;
+    r.run = {a0, a1, y: ay};
+  }
+  return R;
+}
+const textW = (s, px) => s.length * px * .57;
+function fitLabel(name, aw, ah, px){
+  if (textW(name, px) <= aw && ah >= px + 4) return [name];
+  const w = name.split(' ');
+  if (w.length < 2 || ah < 2 * px + 6) return null;
+  let best = null;
+  for (let k = 1; k < w.length; k++){ const a = w.slice(0, k).join(' '), b = w.slice(k).join(' '), mm = Math.max(a.length, b.length); if (!best || mm < best.mm) best = {a, b, mm}; }
+  return Math.max(textW(best.a, px), textW(best.b, px)) <= aw ? [best.a, best.b] : null;
+}
+/* The entrance department (id 'inngang') is shown as an opening in the front wall when it touches it. */
+function doorOf(plan){
+  const y = plan.rows - 1, xs = [];
+  for (let x = 0; x < plan.cols; x++) if (plan.cells[y * plan.cols + x] === 'inngang') xs.push(x);
+  if (!xs.length) return null;
+  const a = xs[0], b = xs[xs.length - 1], cut = b - a >= 2 ? 1 : 0;
+  return {a: a + cut, b: b - cut};
+}
+function riskMapSVG(plan, lv, sel, W){
+  const cols = plan.cols, rows = plan.rows, o = 4, door = doorOf(plan);
+  /* Rows and columns that are mostly aisle are drawn narrower, so the departments sit closer together. */
+  const AISLE = .4, at = (x, y) => (x < 0 || y < 0 || x >= cols || y >= rows) ? null : plan.cells[y * cols + x];
+  const narrowC = Array.from({length: cols}, (_, x) => { let e = 0; for (let y = 0; y < rows; y++) if (!at(x, y)) e++; return e / rows > .5; });
+  const narrowR = Array.from({length: rows}, (_, y) => { let e = 0; for (let x = 0; x < cols; x++) if (!at(x, y)) e++; return e / cols > .5; });
+  const units = narrowC.reduce((s, n) => s + (n ? AISLE : 1), 0);
+  const cs = Math.max(12, Math.min(44, Math.floor((W - 2 * o) / units))), ob = door ? 28 : 0;
+  const X = [o], Y = [o];
+  narrowC.forEach((n, k) => X.push(X[k] + (n ? AISLE : 1) * cs));
+  narrowR.forEach((n, k) => Y.push(Y[k] + (n ? AISLE : 1) * cs));
+  const w = Math.ceil(X[cols] - o), h = Math.ceil(Y[rows] - o);
+  const px = cs >= 24 ? 12 : 10, nx = cs >= 24 ? 15 : 12, R = regionsOf(plan);
+  let zones = '', cells = '', edge = '', selS = '', labels = '';
+  for (const r of R.values()){
+    const info = lv[r.id] || {c: 0, lvl: 'none'}, l = info.lvl, id = esc(r.id), name = stedName(r.id);
+    /* Rectangular departments are separate blocks with a thin gap between them. Other shapes are drawn cell by cell. */
+    if (r.rect){
+      const box = `x="${n2(X[r.x0] + 1)}" y="${n2(Y[r.y0] + 1)}" width="${n2(X[r.x1 + 1] - X[r.x0] - 2)}" height="${n2(Y[r.y1 + 1] - Y[r.y0] - 2)}" rx="3"`;
+      zones += `<rect class="m-zone m-cell m-${l}" ${box} data-loc="${id}"/>`;
+      if (r.id === sel) selS += `<rect class="m-sel" ${box}/>`;
+    } else {
+      let path = '';
+      for (const i of r.cells){
+        const x = i % cols, y = Math.floor(i / cols), qx = n2(X[x]), qy = n2(Y[y]), qx2 = n2(X[x + 1]), qy2 = n2(Y[y + 1]);
+        cells += `<rect class="m-${l} m-cell" x="${qx}" y="${qy}" width="${n2(qx2 - qx)}" height="${n2(qy2 - qy)}" data-loc="${id}"/>`;
+        if (at(x, y - 1) !== r.id) path += `M${qx} ${qy}H${qx2}`;
+        if (at(x + 1, y) !== r.id) path += `M${qx2} ${qy}V${qy2}`;
+        if (at(x, y + 1) !== r.id) path += `M${qx} ${qy2}H${qx2}`;
+        if (at(x - 1, y) !== r.id) path += `M${qx} ${qy}V${qy2}`;
+      }
+      edge += path;
+      if (r.id === sel) selS += `<path class="m-sel" d="${path}"/>`;
+    }
+    /* The name, with the number of incidents under it or after it. Departments without incidents show only the name. */
+    let cx, cy, aw, ah;
+    if (r.rect){ cx = (X[r.x0] + X[r.x1 + 1]) / 2; cy = (Y[r.y0] + Y[r.y1 + 1]) / 2; aw = X[r.x1 + 1] - X[r.x0] - 10; ah = Y[r.y1 + 1] - Y[r.y0] - 8; }
+    else { cx = (X[r.run.a0] + X[r.run.a1 + 1]) / 2; cy = (Y[r.run.y] + Y[r.run.y + 1]) / 2; aw = X[r.run.a1 + 1] - X[r.run.a0] - 6; ah = Y[r.run.y + 1] - Y[r.run.y] - 2; }
+    const num = info.c ? String(info.c) : '', nw = num.length * nx * .62, lh = px + 3, nh = num ? nx + 3 : 0;
+    const t = (s, x, y, anchor) => `<text class="m-t m-tx-${l}" x="${n2(x)}" y="${n2(y)}" text-anchor="${anchor}" dominant-baseline="central"${px === 12 ? '' : ` style="font-size:${px}px"`}>${esc(s)}</text>`;
+    const n = (x, y, anchor) => `<text class="m-n m-tx-${l}" x="${n2(x)}" y="${n2(y)}" text-anchor="${anchor}" dominant-baseline="central"${nx === 15 ? '' : ` style="font-size:${nx}px"`}>${num}</text>`;
+    const place = nm => {
+      const lines = fitLabel(nm, aw, ah - nh, px);
+      if (lines){
+        const t0 = cy - (lines.length * lh + nh) / 2;
+        return lines.map((s, k) => t(s, cx, t0 + lh * k + lh / 2, 'middle')).join('') + (num ? n(cx, t0 + lines.length * lh + nh / 2, 'middle') : '');
+      }
+      const tw = textW(nm, px), gap = num ? 8 : 0;
+      if (aw >= tw + gap + nw && ah >= Math.max(lh, nh)){ const x0 = cx - (tw + gap + nw) / 2; return t(nm, x0, cy, 'start') + (num ? n(x0 + tw + gap, cy, 'start') : ''); }
+      return null;
+    };
+    /* On small maps a long name is shortened to the part before «og», for example «Kjøtt» for «Kjøtt og pålegg» */
+    const short = / og /.test(name) ? name.split(' og ')[0] : null;
+    labels += place(name) || (short && place(short)) || (num && aw >= nw && ah >= nh ? n(cx, cy, 'middle') : '');
+  }
+  /* The outer wall, with an opening and a marker where the entrance is */
+  const y1 = o + h, x1 = o + w;
+  let wall = `M${o} ${y1}V${o}H${x1}V${y1}`, mark = '';
+  if (door){
+    const da = n2(X[door.a]), db = n2(X[door.b + 1]), dc = (da + db) / 2;
+    wall += `H${db}M${da} ${y1}H${o}`;
+    mark = `<path class="m-door-a" d="M${n2(dc)} ${y1 + 13}V${y1 + 3}M${n2(dc - 4)} ${y1 + 7}L${n2(dc)} ${y1 + 3}L${n2(dc + 4)} ${y1 + 7}"/><text class="m-door" x="${n2(dc)}" y="${y1 + 21}" text-anchor="middle" dominant-baseline="central">Inngang</text>`;
+  } else wall += `H${o}`;
+  return `<svg viewBox="0 0 ${w + 2 * o} ${h + 2 * o + ob}" width="${w + 2 * o}" height="${h + 2 * o + ob}" role="img" aria-label="Kart over butikken sett ovenfra, med inngangen nederst. Tallene for hver avdeling står i listen under kartet.">
+    <rect class="m-floor" x="${o}" y="${o}" width="${w}" height="${h}"/><g shape-rendering="crispEdges">${cells}</g>${zones}${edge ? `<path class="m-edge" d="${edge}"/>` : ''}
+    <path class="m-wall" d="${wall}"/>${mark}${selS}${labels}</svg>`;
+}
+function mapLegend(){
+  const sw = cls => `<svg width="18" height="14" aria-hidden="true"><rect class="${cls}" x=".5" y=".5" width="17" height="13" rx="3" style="stroke:var(--field)"/></svg>`;
+  return `<div class="map-legend"><span>${sw('m-none')}Ingen</span><span>${sw('m-lav')}Lav</span><span>${sw('m-middels')}Middels</span><span>${sw('m-hoy')}Høy</span><span>Tallet er antall hendelser</span></div>`;
+}
+
+/* ================= Statistikk ================= */
+function renderStatistikk(){
+  const today = now().day, P = periodRange(S.ui.statPeriod, today), list = inRange(S.inc, P.from, P.to);
+  const periods = [['4u', '4 uker'], ['8u', '8 uker'], ['12u', '12 uker'], ['aar', 'Hittil i år'], ['alt', 'Alt']];
+  let h = `<header class="vhead"><h1 id="h-statistikk" tabindex="-1">Statistikk</h1><p>Hvor mye som blir registrert, hva det endte med, og når og hvor det skjer.</p></header>
+    <div class="toolbar"><div class="seg" role="group" aria-label="Velg periode">${periods.map(([k, l]) => `<button type="button" data-act="stat-period" data-v="${k}" data-fk="sp-${k}" aria-pressed="${S.ui.statPeriod === k}">${l}</button>`).join('')}</div>
+    <span class="muted small">${fDate(P.from)}–${fDate(P.to)}</span></div>`;
+  if (!list.length){ $('#v-statistikk').innerHTML = h + '<div class="card"><h2 class="ch">Ingen hendelser i perioden</h2><p class="sub" style="margin:0">Når de ansatte registrerer, vises tallene her.</p></div>'; return; }
+  const N = list.length, c = r => list.filter(i => i.res === r).length, B = c('bekreftet'), I = c('ikke'), V = c('venter');
+  h += `<div class="kpis">
+    <div class="kpi"><p class="kl">Registreringer</p><p class="kv">${fInt(N)}</p><p class="ks">${esc(compareText(P, N, today) || 'Alle registreringer i perioden.')}</p></div>
+    <div class="kpi"><p class="kl">Bekreftede tyverier</p><p class="kv">${fInt(B)}</p><p class="ks">${B + I ? `${fPct(pctOf(B, B + I))} av de vurderte hendelsene.` : 'Ingen er vurdert ennå.'}</p></div>
+    <div class="kpi"><p class="kl">Ikke bekreftet</p><p class="kv">${fInt(I)}</p><p class="ks">Vurdert, men ikke bekreftet som tyveri.</p></div>
+    <div class="kpi"><p class="kl">Venter på vurdering</p><p class="kv">${fInt(V)}</p><p class="ks">${V ? '<a href="#hjem">Vurder på Hjem</a>' : 'Alt er vurdert.'}</p></div>
+  </div>`;
+  const bk = makeBuckets(P.from, P.to);
+  for (const i of S.inc){ if (i.day < bk.list[0].from || i.day > P.to) continue; const b = bk.list.find(x => i.day >= x.from && i.day <= x.to); if (b) b[i.res === 'bekreftet' ? 'b' : i.res === 'ikke' ? 'i' : 'v']++; }
+  const W = contentWidth(), firstDay = S.inc.length ? S.inc[0].day : today;
+  h += `<section class="card" aria-labelledby="trendH"><h2 class="ch" id="trendH">Utvikling per ${bk.kind === 'uke' ? 'uke' : 'måned'}</h2>
+    <div class="legend"><span><i class="sw b"></i>Bekreftet tyveri</span><span><i class="sw i"></i>Ikke bekreftet</span><span><i class="sw v"></i>Venter på vurdering</span></div>
+    <div class="chart">${trendChart(bk, W)}</div>
+    <p class="small muted" style="margin:8px 0 0">Grafen viser hele ${bk.kind === 'uke' ? 'uker (mandag til søndag)' : 'måneder'}. ${bk.kind === 'uke' ? 'Inneværende uke' : 'Inneværende måned'} er ikke ferdig og vises lysere.${firstDay > bk.list[0].from ? ` Første registrering var ${fDate(firstDay)}.` : ''}</p>
+    <details class="tbl-d"><summary>Vis som tabell</summary><div class="tbl-wrap"><table class="tbl"><caption class="sr-only">Hendelser per ${bk.kind === 'uke' ? 'uke' : 'måned'}</caption><thead><tr><th scope="col">${bk.kind === 'uke' ? 'Uke' : 'Måned'}</th><th scope="col" class="num-c">Bekreftet</th><th scope="col" class="num-c">Ikke bekreftet</th><th scope="col" class="num-c">Venter</th><th scope="col" class="num-c">Totalt</th></tr></thead><tbody>${bk.list.map(b => `<tr><th scope="row">${esc(b.label)}${b.partial ? ' (ikke ferdig)' : ''}</th><td class="num-c">${b.b}</td><td class="num-c">${b.i}</td><td class="num-c">${b.v}</td><td class="num-c">${b.b + b.i + b.v}</td></tr>`).join('')}</tbody></table></div></details>
+  </section>`;
+  const basis = S.ui.statBasis === 'bekreftet' ? list.filter(i => i.res === 'bekreftet') : list;
+  const bl = S.ui.statBasis === 'bekreftet' ? 'bekreftede tyverier' : 'registreringer';
+  h += `<div class="toolbar" style="margin:22px 0 12px"><span class="small" id="basisL">Når og hvor, regnet ut fra</span><div class="seg" role="group" aria-labelledby="basisL"><button type="button" data-act="stat-basis" data-v="alle" data-fk="sb-alle" aria-pressed="${S.ui.statBasis === 'alle'}">Alle registreringer</button><button type="button" data-act="stat-basis" data-v="bekreftet" data-fk="sb-bekreftet" aria-pressed="${S.ui.statBasis === 'bekreftet'}">Bare bekreftede tyverier</button></div></div>`;
+  if (!basis.length) h += '<div class="card"><p class="sub" style="margin:0">Ingen bekreftede tyverier i perioden.</p></div>';
+  else {
+    const hc = heatChart(basis, W), w3 = bestWindow(hoursOf(basis), 0, 24, 3);
+    const wdc = new Array(7).fill(0); for (const i of basis) wdc[i.wd]++;
+    const topWd = [0, 1, 2, 3, 4, 5, 6].sort((a, b) => wdc[b] - wdc[a] || a - b)[0];
+    h += `<section class="card" aria-labelledby="heatH"><h2 class="ch" id="heatH">Når skjer det?</h2>
+      <p class="sub">${w3 ? `Flest ${bl} ${w3.txt} (${w3.c} av ${basis.length}).` : ''} Flest på ${WD_PL[topWd]} (${wdc[topWd]}).</p>
+      <div class="chart" style="overflow-x:auto">${hc.svg}</div>
+      <div class="heat-legend"><span>Færre</span><span class="ramp"><i style="background:var(--h1)"></i><i style="background:var(--h2)"></i><i style="background:var(--h3)"></i><i style="background:var(--h4)"></i></span><span>Flere (mest i én time: ${hc.max})</span></div>
+      <details class="tbl-d"><summary>Vis som tabell</summary><div class="tbl-wrap"><table class="tbl"><caption class="sr-only">Hendelser per ukedag og time</caption><thead><tr><th scope="col">Dag</th>${Array.from({length: hc.hmax - hc.hmin + 1}, (_, k) => `<th scope="col" class="num-c">${pad(hc.hmin + k)}</th>`).join('')}<th scope="col" class="num-c">Sum</th></tr></thead><tbody>${WD.map((d, di) => `<tr><th scope="row">${cap(d)}</th>${Array.from({length: hc.hmax - hc.hmin + 1}, (_, k) => `<td class="num-c">${hc.m[di][hc.hmin + k]}</td>`).join('')}<td class="num-c">${wdc[di]}</td></tr>`).join('')}</tbody></table></div></details>
+    </section>`;
+    h += whereSection(basis, list, W);
+  }
+  const row = t => { const l = list.filter(i => i.type === t), b = l.filter(i => i.res === 'bekreftet').length, ik = l.filter(i => i.res === 'ikke').length; return {l: l.length, b, ik, v: l.length - b - ik}; };
+  const rt = row('tyveri'), rm = row('mistenkt');
+  const pctC = r => r.b + r.ik ? fPct(pctOf(r.b, r.b + r.ik)) : 'Ingen vurdert';
+  h += `<section class="card" aria-labelledby="hitH" style="margin-top:16px"><h2 class="ch" id="hitH">Tyveri eller mistanke?</h2>
+    <p class="sub">${rm.b + rm.ik ? `Av ${rm.b + rm.ik} vurderte mistanker ble ${rm.b} bekreftet som tyveri (${pctC(rm)}).` : 'Ingen mistanker er vurdert i perioden.'}</p>
+    <div class="tbl-wrap"><table class="tbl"><caption class="sr-only">Registrert som, og resultatet</caption><thead><tr><th scope="col">Registrert som</th><th scope="col" class="num-c">Antall</th><th scope="col" class="num-c">Bekreftet</th><th scope="col" class="num-c">Ikke bekreftet</th><th scope="col" class="num-c">Venter</th><th scope="col" class="num-c">Andel bekreftet</th></tr></thead>
+    <tbody><tr><th scope="row">Tyveri</th><td class="num-c">${rt.l}</td><td class="num-c">${rt.b}</td><td class="num-c">${rt.ik}</td><td class="num-c">${rt.v}</td><td class="num-c">${pctC(rt)}</td></tr><tr><th scope="row">Mistenkt tyveri</th><td class="num-c">${rm.l}</td><td class="num-c">${rm.b}</td><td class="num-c">${rm.ik}</td><td class="num-c">${rm.v}</td><td class="num-c">${pctC(rm)}</td></tr></tbody></table></div>
+    <p class="small muted" style="margin:8px 0 0">Andel bekreftet regnes av de vurderte hendelsene, ikke av dem som venter.</p>
+  </section>
+  <section class="card" aria-labelledby="omH" style="margin-top:16px"><h2 class="ch" id="omH">Om tallene</h2><ul class="notes-list">
+    <li>Tallene viser bare det som er registrert. Hvis flere begynner å registrere, kan tallene øke selv om tyveriene ikke har økt.</li>
+    <li>Mest utsatte tid er de tre sammenhengende timene med flest hendelser.</li>
+    <li>På kartet betyr høy at avdelingen har minst 20 % av hendelsene (og minst 3), middels minst 10 % (og minst 2). Resten er lav.</li>
+    ${S.invalidCount ? `<li>${S.invalidCount} lagrede registreringer hadde feil format og er ikke med.</li>` : ''}
+  </ul></section>`;
+  $('#v-statistikk').innerHTML = h;
+}
+function whereSection(basis, list, W){
+  const by = sortedEntries(countBy(basis, i => i.sted));
+  const conf = countBy(list.filter(i => i.res === 'bekreftet'), i => i.sted);
+  const plan = S.settings.plan, placed = new Set(plan ? plan.cells.filter(Boolean) : []);
+  let h = `<section class="card" aria-labelledby="whereH" style="margin-top:16px"><h2 class="ch" id="whereH">Hvor skjer det?</h2>`;
+  if (placed.size){
+    const total = basis.length, counts = countBy(basis, i => i.sted), lv = {};
+    for (const s of S.settings.steder){ const c = counts.get(s.id) || 0; lv[s.id] = {c, lvl: total ? zoneLevel(c, total) : 'none'}; }
+    const zones = S.settings.steder.filter(s => placed.has(s.id)).map(s => ({id: s.id, ...lv[s.id]})).sort((a, b) => b.c - a.c || (stedName(a.id) < stedName(b.id) ? -1 : 1));
+    if (!S.ui.mapSel || !placed.has(S.ui.mapSel)) S.ui.mapSel = zones[0].id;
+    const sel = S.ui.mapSel, z = lv[sel], sl = basis.filter(i => i.sted === sel), sw = bestWindow(hoursOf(sl), 0, 24, 3);
+    h += `<p class="sub">Grønn betyr få hendelser og rød betyr mange, regnet som andel av alle hendelsene. Grå betyr ingen hendelser. Trykk på en avdeling for detaljer.</p>
+      <div class="map">${riskMapSVG(plan, lv, sel, Math.min(W, 640))}</div>${mapLegend()}
+      <div class="zd" aria-live="polite"><h3>${esc(stedName(sel))}</h3><p><span class="lvl ${z.lvl}">${LVL_TXT[z.lvl]}${z.lvl !== 'none' ? ' risiko' : ''}</span> ${z.c} av ${total} (${fPct(pctOf(z.c, total))})${S.ui.statBasis === 'alle' ? `, ${conf.get(sel) || 0} bekreftet` : ''}</p>${sw ? `<p class="small">Mest utsatte tid: ${sw.txt}</p>` : ''}</div>
+      <ul class="zone-list" aria-label="Avdelinger på kartet">${zones.map(q => `<li><button type="button" data-act="map-sel" data-id="${esc(q.id)}" aria-pressed="${q.id === sel}" data-fk="z-${esc(q.id)}"><span class="zn">${esc(stedName(q.id))}</span><span class="lvl ${q.lvl}">${LVL_TXT[q.lvl]}</span><span class="zc">${q.c}</span></button></li>`).join('')}</ul>`;
+    const missing = by.filter(([id]) => !placed.has(id));
+    if (missing.length) h += `<p class="small muted" style="margin-top:12px">Ikke tegnet på kartet: ${esc(joinNo(missing.map(([id, n]) => `${stedName(id)} (${n})`)))}.</p>`;
+  } else {
+    h += `<p class="sub">Antall hendelser per avdeling.${S.ui.statBasis === 'alle' ? ' I parentes: andel av alle.' : ''}</p>${barList(by, basis.length, stedName, S.ui.statBasis === 'alle' ? k => `<em>, ${conf.get(k) || 0} bekreftet</em>` : null)}
+      <p class="small" style="margin:14px 0 0">Tegn butikken under <a href="#innstillinger">Innstillinger</a> for å se dette som et kart.</p>`;
+  }
+  return h + '</section>';
+}
+
+/* ================= Rapporter ================= */
+function numsHTML(t){
+  const a = t.avdelinger[0];
+  return `<div class="report-nums">
+    <div class="num"><b>${t.antall}</b><span>registreringer</span></div>
+    <div class="num"><b>${t.bekreftet}</b><span>bekreftede tyverier</span></div>
+    <div class="num"><b>${a ? esc(a.navn) : 'Ingen'}</b><span>${a ? `flest hendelser (${a.n})` : 'avdeling med flest hendelser'}</span></div>
+    <div class="num"><b>${t.tidsrom ? hrange(t.tidsrom.fra, t.tidsrom.til) : 'Ingen'}</b><span>mest utsatte tid</span></div>
+  </div>
+  <p class="small muted" style="margin:0">${plural(t.tyveri, 'tyveri', 'tyverier')} og ${plural(t.mistenkt, 'mistanke', 'mistanker')}.${t.venter ? ` ${t.venter} uten vurdering.` : ''} Uka før: ${plural(t.forrige, 'registrering', 'registreringer')}.</p>`;
+}
+function reportCard(rp, since, isSjef){
+  const w = weekFromId(rp.uke), today = now().day, pt = tidParts(rp.publisert);
+  const isNew = !isSjef && since !== null && !!pt && rp.publisert > since && pt.day >= today - 14;
+  return `<article class="card report" aria-labelledby="rp-${esc(rp.id)}">
+    <div class="report-head"><h2 class="ch" id="rp-${esc(rp.id)}">Uke ${w.week}</h2>${isNew ? '<span class="newtag">Ny</span>' : ''}<span class="muted small">${fRange(w.from, w.to)} · publisert ${esc(whenStr(rp.publisert, today).toLowerCase())}</span></div>
+    ${rp.melding ? `<p class="report-msg">${esc(rp.melding)}</p>` : ''}
+    ${numsHTML(rp.tall)}
+    ${isSjef ? `<div><button type="button" class="linkbtn" data-act="rep-edit" data-week="${esc(rp.uke)}">Endre rapporten</button></div>` : ''}
+  </article>`;
+}
+function renderRapporter(){
+  const isSjef = role() === 'sjef', today = now().day;
+  let h = `<header class="vhead"><h1 id="h-rapporter" tabindex="-1">Ukesrapporter</h1><p>${isSjef ? 'Lag en kort rapport hver uke. Alle ansatte kan lese den.' : 'Butikksjefens oppsummering av uka.'}</p></header>`;
+  if (isSjef) h += reportEditor(today);
+  if (!S.reports.length) h += `<div class="card"><p class="sub" style="margin:0">Ingen rapporter er publisert ennå.</p></div>`;
+  else {
+    if (isSjef) h += '<h2 class="day-h">Publiserte rapporter</h2>';
+    h += `<div class="stack">${S.reports.slice(0, S.ui.repShown).map(rp => reportCard(rp, isSjef ? null : S.ui.repSince, isSjef)).join('')}</div>`;
+    if (S.reports.length > S.ui.repShown) h += `<div class="btn-row" style="margin-top:12px"><button type="button" class="btn btn-secondary" data-act="rep-flere" data-fk="rpf">Vis eldre rapporter</button></div>`;
+  }
+  $('#v-rapporter').innerHTML = h;
+}
+function reportEditor(today){
+  const mon = mondayOf(today), weeks = [];
+  for (let k = 0; k < 8; k++) weeks.push(weekIdOf(mon - 7 * k));
+  if (!S.ui.repWeek || !weeks.includes(S.ui.repWeek)) S.ui.repWeek = weeks[1];
+  const existing = S.reports.find(x => x.uke === S.ui.repWeek);
+  if (S.ui.repMsgFor !== S.ui.repWeek){ S.ui.repMsg = existing ? existing.melding : ''; S.ui.repMsgFor = S.ui.repWeek; }
+  const wk = weekFromId(S.ui.repWeek), d = reportData(S.ui.repWeek);
+  return `<section class="card" aria-labelledby="repEdH" style="margin-bottom:16px"><h2 class="ch" id="repEdH">${existing ? 'Endre ukesrapport' : 'Lag ukesrapport'}</h2>
+    <div class="field" style="margin-top:12px"><label for="rep-uke">Uke</label><select id="rep-uke" data-act-input="rep-uke" data-fk="rep-uke">${weeks.map((id, k) => { const w = weekFromId(id); const ex = S.reports.some(x => x.uke === id); return `<option value="${id}"${id === S.ui.repWeek ? ' selected' : ''}>Uke ${w.week} (${fRange(w.from, w.to)})${k === 0 ? ', denne uken' : ''}${ex ? ', publisert' : ''}</option>`; }).join('')}</select></div>
+    <h3 class="h3">Tall for uke ${wk.week}</h3>${numsHTML(d)}${wk.to >= today ? '<p class="small muted" style="margin:6px 0 0">Uka er ikke ferdig ennå.</p>' : ''}
+    <div class="field" style="margin:16px 0 12px"><label for="rep-melding">Melding til de ansatte <span class="muted" style="font-weight:400">(valgfritt)</span></label>
+      <p class="hint" id="rep-hint">For eksempel hva dere skal passe ekstra på neste uke.</p>
+      <textarea id="rep-melding" rows="4" maxlength="${MSG_MAX}" data-act-input="rep-melding" data-fk="rep-melding" aria-describedby="rep-hint rep-count">${esc(S.ui.repMsg)}</textarea>
+      <p class="counter" id="rep-count">${counter(S.ui.repMsg.length, MSG_MAX)}</p></div>
+    <button type="button" class="btn btn-primary" data-act="rep-publish" data-fk="rep-publish">${existing ? 'Publiser endringene' : 'Publiser til alle ansatte'}</button>
+    <p class="small muted" style="margin:10px 0 0">Tallene i rapporten låses når du publiserer.</p>
+  </section>`;
+}
+
+/* ================= Innstillinger ================= */
+function renderInnstillinger(){
+  if (!S.ui.setupDraft || !S.ui.setupDirty) S.ui.setupDraft = {butikk: S.settings.butikk, steder: clone(S.settings.steder)};
+  const d = S.ui.setupDraft, ro = !S.canWrite || role() !== 'sjef';
+  const plan = S.settings.plan, placedN = plan ? new Set(plan.cells.filter(Boolean)).size : 0, local = S.mode === 'local';
+  let access = local ? usersHTML(ro) : '<p class="sub">I demoen bytter du bruker ved å logge ut og logge inn som en annen.</p>';
+  let h = `<header class="vhead"><h1 id="h-innstillinger" tabindex="-1">Innstillinger</h1><p>Butikken, avdelingene og hvem som har tilgang.</p></header>`;
+  if (S.ui.setupMsg) h += note(S.ui.setupMsg.kind, esc(S.ui.setupMsg.text));
+  h += `<form id="setupForm" novalidate><fieldset class="plain"${ro ? ' disabled' : ''}><div class="stack">
+    <section class="card" aria-labelledby="sbH"><h2 class="ch" id="sbH">Butikk</h2>
+      <div class="field" style="margin:8px 0 0"><label for="s-butikk">Navn på butikken</label><input type="text" id="s-butikk" maxlength="60" value="${esc(d.butikk)}" data-set="butikk" autocomplete="organization"></div></section>
+    <section class="card" aria-labelledby="ssH"><h2 class="ch" id="ssH">Avdelinger</h2><p class="sub">Dette er valgene de ansatte får under «Hvor skjedde det?». Fjerner du en avdeling, beholdes hendelsene som allerede er registrert der.</p>
+      <ul class="set-rows">${d.steder.map((s, k) => `<li><label class="sr-only" for="sn-${k}">Avdeling ${k + 1}</label><input type="text" id="sn-${k}" maxlength="60" value="${esc(s.navn)}" data-set="sn-${k}"><button type="button" class="btn btn-secondary btn-sm" data-act="sted-fjern" data-k="${k}" aria-label="Fjern ${esc(s.navn || 'avdeling ' + (k + 1))}"${d.steder.length <= 1 ? ' disabled' : ''}>${icon('trash')}<span class="sr-only">Fjern</span></button></li>`).join('')}</ul>
+      <button type="button" class="btn btn-secondary" data-act="sted-ny" data-fk="sted-ny">${icon('plus')}Legg til avdeling</button><p class="field-error" id="err-steder" hidden style="margin-top:10px"></p></section>
+    <div class="btn-row"><button type="submit" class="btn btn-primary btn-lg">Lagre</button>${S.ui.setupDirty ? '<button type="button" class="btn btn-secondary" data-act="setup-angre">Forkast endringer</button><span class="muted small">Du har endringer som ikke er lagret.</span>' : ''}</div>
+  </div></fieldset></form>
+  <div class="stack" style="margin-top:16px">
+    <section class="card" aria-labelledby="spH"><h2 class="ch" id="spH">Plantegning</h2><p class="sub">${placedN ? `${placedN} av ${S.settings.steder.length} avdelinger er tegnet.` : 'Ikke laget ennå.'} Plantegningen brukes til kartet under Statistikk.</p>
+      <a class="btn btn-secondary" href="#plantegning">${icon('grid')}${plan ? 'Endre plantegning' : 'Lag plantegning'}</a></section>
+    <section class="card" aria-labelledby="stH"><h2 class="ch" id="stH">Ansatte og tilgang</h2>
+      ${access}
+      <button type="button" class="btn btn-secondary" data-act="preview-on">Se appen slik en ansatt ser den</button></section>
+    ${local && !ro ? pinChangeHTML() : ''}
+    <section class="card" aria-labelledby="sdH"><h2 class="ch" id="sdH">Data</h2>
+      ${S.exportAvail ? `<div class="btn-row" style="margin-bottom:16px"><button type="button" class="btn btn-secondary" data-act="csv" ${S.inc.length ? '' : 'disabled'}>${icon('download')}Last ned alle hendelser som CSV</button>${local && !ro ? `<button type="button" class="btn btn-secondary" data-act="backup">${icon('download')}Last ned sikkerhetskopi</button>` : ''}</div>` : ''}
+      ${local && !ro ? '<p class="sub">Sikkerhetskopien har alt som er lagret, også brukerne. Ta vare på den et trygt sted, og ikke del den med andre.</p>' : ''}
+      ${ro ? '' : (() => { const old = S.inc.filter(i => i.day < now().day - 730).length; return `<div class="btn-row" style="margin-bottom:16px"><button type="button" class="btn btn-secondary" data-act="slett-gamle" ${old ? '' : 'disabled'}>Slett hendelser eldre enn 24 måneder (${old})</button></div>
+      <div class="field" style="margin:0 0 10px"><label for="wipe">Skriv SLETT for å slette alle ${S.inc.length} hendelsene</label><input type="text" id="wipe" class="w-sm" autocomplete="off" value="${esc(S.ui.confirmWipe)}" data-act-input="wipe" data-fk="wipe"></div>
+      <button type="button" class="btn btn-danger" data-act="slett-alle" ${S.ui.confirmWipe.trim().toUpperCase() === 'SLETT' && S.inc.length ? '' : 'disabled'}>${icon('trash')}Slett alle hendelser</button>
+      <p class="sub" id="wipeProgress" role="status" style="margin:10px 0 0"></p>`; })()}
+    </section>
+    ${local && !ro ? restoreHTML('innstillinger') + resetHTML('innstillinger') : ''}
+  </div>`;
+  $('#v-innstillinger').innerHTML = h;
+}
+/* Local version: who can log in on this device. Removed employees keep their name on what they registered. */
+function usersHTML(ro){
+  const row = u => {
+    const eid = esc(u.id), me = !!S.me && u.id === S.me.id;
+    let act = '';
+    if (!u.sjef && !ro) act = S.ui.confirmUser === u.id
+      ? `<div class="confirm"><span>Fjerne ${esc(u.navn)}? Hendelsene som er registrert, blir liggende.</span><button type="button" class="btn btn-danger btn-sm" data-act="user-fjern-ja" data-id="${eid}" data-fk="ufj-${eid}">Ja, fjern</button><button type="button" class="btn btn-secondary btn-sm" data-act="user-fjern-nei" data-id="${eid}">Avbryt</button></div>`
+      : `<button type="button" class="btn btn-secondary btn-sm" data-act="user-fjern" data-id="${eid}" data-fk="uf-${eid}" aria-label="Fjern ${esc(u.navn)}">Fjern</button>`;
+    return `<li><span class="who"><span class="avatar" aria-hidden="true">${esc(initials(u.navn))}</span><span><b>${esc(u.navn)}${me ? ' (deg)' : ''}</b><small>${u.sjef ? 'Butikksjef' : 'Ansatt'}</small></span></span>${act}</li>`;
+  };
+  return `<p class="sub">Ansatte logger inn ved å velge navnet sitt. Butikksjefen logger inn med PIN-kode.</p>
+    <ul class="set-rows user-rows">${activeUsers().map(row).join('')}</ul>
+    ${ro ? '' : `<form id="userForm" class="field" style="margin:16px 0" novalidate><label for="u-navn">Legg til en ansatt</label><p class="field-error" id="err-unavn" hidden></p>
+      <div class="add-row"><input type="text" id="u-navn" maxlength="${NAME_MAX}" autocomplete="off" aria-describedby="err-unavn" data-fk="u-navn"><button type="submit" class="btn btn-secondary">${icon('plus')}Legg til</button></div></form>`}`;
+}
+function pinChangeHTML(){
+  const pinField = (id, label, hint) => `<div class="field"><label for="${id}">${label}</label>${hint ? `<p class="hint" id="${id}-h">${hint}</p>` : ''}<p class="field-error" id="err-${id}" hidden></p>
+    <input type="password" id="${id}" class="w-sm" inputmode="numeric" maxlength="8" autocomplete="off" aria-describedby="${hint ? `${id}-h ` : ''}err-${id}"></div>`;
+  return `<section class="card" aria-labelledby="spinH"><h2 class="ch" id="spinH" tabindex="-1">PIN-koden din</h2>
+    <form id="pinChangeForm" novalidate>${pinField('pc-old', 'PIN-koden du har nå', '')}${pinField('pc-new', 'Ny PIN-kode', '4 til 8 sifre.')}${pinField('pc-new2', 'Gjenta den nye PIN-koden', '')}
+      <button type="submit" class="btn btn-secondary">Endre PIN-kode</button></form></section>`;
+}
+function submitUser(){
+  if (S.mode !== 'local' || role() !== 'sjef') return;
+  const inp = $('#u-navn'), navn = cleanLine(inp.value, NAME_MAX);
+  const msg = !navn ? 'Skriv inn navnet på den ansatte' : nameTaken(navn) ? 'Det finnes allerede en bruker med dette navnet' : activeUsers().length >= USERS_MAX ? `Det kan være opptil ${USERS_MAX} brukere` : '';
+  if (msg){ fieldErr('err-unavn', msg, inp); inp.focus(); return; }
+  try { saveLocal({...LOCAL, brukere: [...LOCAL.brukere, {id: genId(), navn, sjef: false, pin: null, fjernet: false}]}); }
+  catch (err) { fieldErr('err-unavn', errText(err), inp); inp.focus(); return; }
+  toast(`${navn} er lagt til`);
+  renderChrome(); renderView('innstillinger');
+  const el = $('#u-navn'); if (el) el.focus();
+}
+function submitPinChange(){
+  if (S.mode !== 'local' || role() !== 'sjef' || !S.me) return;
+  const u = S.users.find(x => x.id === S.me.id && x.sjef); if (!u) return;
+  const o = $('#pc-old'), n1 = $('#pc-new'), n2 = $('#pc-new2');
+  const e1 = !o.value ? 'Skriv inn PIN-koden du har nå' : pinOk(u, o.value) ? '' : 'Feil PIN-kode';
+  const e2 = PIN_RE.test(n1.value) ? '' : 'PIN-koden må være 4 til 8 sifre';
+  const e3 = e2 ? '' : n2.value !== n1.value ? 'PIN-kodene er ikke like' : '';
+  if (e1 && o.value) o.value = '';
+  fieldErr('err-pc-old', e1, o); fieldErr('err-pc-new', e2, n1); fieldErr('err-pc-new2', e3, n2);
+  const first = e1 ? o : e2 ? n1 : e3 ? n2 : null;
+  if (first){ first.focus(); return; }
+  try { saveLocal({...LOCAL, brukere: LOCAL.brukere.map(x => x.id === u.id ? {...x, pin: newPin(n1.value)} : x)}); }
+  catch (err) { fieldErr('err-pc-old', errText(err), o); o.focus(); return; }
+  toast('PIN-koden er endret');
+  renderView('innstillinger'); const hd = $('#spinH'); if (hd) hd.focus();
+}
+async function readBackupFile(el){
+  const f = el.files && el.files[0];
+  if (!f || S.mode !== 'local' || (S.me && role() !== 'sjef')) return;
+  const big = f.size > 20e6;
+  let n = null;
+  if (!big){ try { n = parseBackup(await f.text()); } catch (e) { n = null; } }
+  S.ui.restore = n ? {ok: true, data: n, file: f.name, counts: {hendelser: n.hendelser.length, rapporter: n.rapporter.length, brukere: n.brukere.filter(u => !u.fjernet).length}}
+    : {ok: false, msg: big ? 'Filen er for stor til å være en sikkerhetskopi fra 4CAST.' : 'Filen er ikke en sikkerhetskopi fra 4CAST, eller den er skadet.'};
+  renderView(S.view);
+  const t = n ? $('[data-fk="restore-ja"]') : $(`#restore-${S.view === 'oppstart' ? 'oppstart' : 'innstillinger'}`);
+  if (t) t.focus();
+}
+function setupInput(el){
+  const d = S.ui.setupDraft, k = el.dataset.set; if (!d || !k) return;
+  S.ui.setupDirty = true;
+  const m = /^sn-(\d+)$/.exec(k);
+  if (k === 'butikk') d.butikk = el.value; else if (m) d.steder[+m[1]].navn = el.value;
+}
+async function saveSetup(e){
+  e.preventDefault();
+  if (role() !== 'sjef' || !S.canWrite || S.ui.busy) return;
+  const d = S.ui.setupDraft, p = $('#err-steder'), names = d.steder.map(s => s.navn.trim().toLowerCase());
+  const msg = names.some(n => !n) ? 'Alle avdelinger må ha et navn' : new Set(names).size !== names.length ? 'To avdelinger har samme navn' : '';
+  if (msg){ p.innerHTML = icon('alert') + `<span>${esc(msg)}</span>`; p.hidden = false; p.scrollIntoView({block: 'center'}); return; }
+  const steder = d.steder.map(s => ({id: s.id, navn: s.navn.trim().slice(0, 60)})), keep = new Set(steder.map(s => s.id));
+  const plan = S.settings.plan ? {cols: S.settings.plan.cols, rows: S.settings.plan.rows, cells: S.settings.plan.cells.map(v => keep.has(v) ? v : '')} : null;
+  S.ui.busy = true;
+  try { await Store.saveSettings({butikk: d.butikk.trim().slice(0, 60), steder, plan}); S.ui.setupDirty = false; S.ui.setupDraft = null; S.ui.setupMsg = {kind: 'info', text: 'Innstillingene er lagret.'}; toast('Lagret'); }
+  catch (err) { S.ui.setupMsg = {kind: 'err', text: errText(err)}; }
+  finally { S.ui.busy = false; renderView('innstillinger'); const hd = $('#h-innstillinger'); if (hd) hd.focus(); }
+}
+
+/* ================= Plantegning (floor plan editor) ================= */
+function planState(){
+  const ps = S.ui.plan;
+  if (!ps.draft || !ps.dirty){ ps.draft = S.settings.plan ? clone(S.settings.plan) : emptyPlan(TEMPLATE.cols, TEMPLATE.rows); if (!ps.dirty) ps.history = []; }
+  if (ps.sel == null || (ps.sel !== '' && !S.settings.steder.some(s => s.id === ps.sel))) ps.sel = S.settings.steder[0] ? S.settings.steder[0].id : '';
+  if (ps.cursor >= ps.draft.cells.length) ps.cursor = 0;
+  return ps;
+}
+function planGridHTML(d, ps){
+  const at = (x, y) => (x < 0 || y < 0 || x >= d.cols || y >= d.rows) ? null : d.cells[y * d.cols + x];
+  let cells = '';
+  for (let i = 0; i < d.cells.length; i++){
+    const x = i % d.cols, y = Math.floor(i / d.cols), id = d.cells[i], isSel = !!id && id === ps.sel;
+    const col = isSel ? 'var(--accent)' : 'var(--ink-2)', sh = ['inset 0 0 0 .5px var(--line)'];
+    if (id){
+      if (at(x, y - 1) !== id) sh.push(`inset 0 2px 0 ${col}`);
+      if (at(x + 1, y) !== id) sh.push(`inset -2px 0 0 ${col}`);
+      if (at(x, y + 1) !== id) sh.push(`inset 0 -2px 0 ${col}`);
+      if (at(x - 1, y) !== id) sh.push(`inset 2px 0 0 ${col}`);
+    }
+    cells += `<button type="button" class="pc${id ? (isSel ? ' sel' : ' on') : ''}" data-cell="${i}" data-fk="pc-${i}" tabindex="${i === ps.cursor ? 0 : -1}" aria-label="Rad ${y + 1}, kolonne ${x + 1}: ${esc(id ? stedName(id) : 'tom')}" aria-pressed="${isSel}" style="box-shadow:${sh.join(',')}"></button>`;
+  }
+  let labels = '';
+  for (const r of regionsOf(d).values()){
+    if (r.cells.length < 2) continue;
+    const name = esc(stedName(r.id)), bw = r.x1 - r.x0 + 1, bh = r.y1 - r.y0 + 1;
+    if (r.rect && bh >= 2 * bw && bw <= 2) labels += `<span style="left:${(r.x0 + bw / 2) / d.cols * 100}%;top:${(r.y0 + bh / 2) / d.rows * 100}%;height:${bh / d.rows * 100}%;writing-mode:vertical-rl;transform:translate(-50%,-50%) rotate(180deg);max-height:none;max-width:2.4em;display:flex;align-items:center;justify-content:center">${name}</span>`;
+    else if (r.rect) labels += `<span style="left:${(r.x0 + bw / 2) / d.cols * 100}%;top:${(r.y0 + bh / 2) / d.rows * 100}%;width:${bw / d.cols * 100}%">${name}</span>`;
+    else { const rw = r.run.a1 - r.run.a0 + 1; labels += `<span style="left:${(r.run.a0 + rw / 2) / d.cols * 100}%;top:${(r.run.y + .5) / d.rows * 100}%;width:${rw / d.cols * 100}%">${name}</span>`; }
+  }
+  return `<div class="plan-grid" id="planGrid" role="group" aria-label="Plantegning, ${d.cols} ruter bred og ${d.rows} ruter dyp" style="grid-template-columns:repeat(${d.cols},minmax(0,1fr))">${cells}</div><div class="plan-labels" aria-hidden="true">${labels}</div>`;
+}
+function renderPlantegning(){
+  const ps = planState(), d = ps.draft, ro = !S.canWrite || role() !== 'sjef';
+  const sizes = val => Array.from({length: PLAN_MAX - PLAN_MIN + 1}, (_, k) => PLAN_MIN + k).map(v => `<option value="${v}"${v === val ? ' selected' : ''}>${v}</option>`).join('');
+  const palOpt = (id, name) => { const hid = 'pal-' + (id || 'viskelaer-0'); return `<label class="opt" for="${hid}"><input type="radio" name="pal" id="${hid}" value="${esc(id)}"${ps.sel === id ? ' checked' : ''} data-act-input="pal" data-fk="${hid}"><b>${esc(name)}</b></label>`; };
+  const missing = S.settings.steder.filter(s => !d.cells.includes(s.id)).map(s => s.navn);
+  let h = `<header class="vhead"><h1 id="h-plantegning" tabindex="-1">Plantegning</h1><p>Tegn butikken sett ovenfra, med inngangen nederst. Velg en avdeling, og trykk eller dra over rutene der den ligger.</p></header>
+    <p style="margin:-8px 0 16px"><a href="#innstillinger">Tilbake til Innstillinger</a></p>`;
+  if (ps.msg) h += note(ps.msg.kind, esc(ps.msg.text));
+  h += `<div class="card"><fieldset class="plain"${ro ? ' disabled' : ''}>
+    <div class="plan-tools">
+      <div><label for="plan-cols">Bredde (ruter)</label><select id="plan-cols" data-act-input="plan-cols" data-fk="plan-cols">${sizes(d.cols)}</select></div>
+      <div><label for="plan-rows">Dybde (ruter)</label><select id="plan-rows" data-act-input="plan-rows" data-fk="plan-rows">${sizes(d.rows)}</select></div>
+      <button type="button" class="btn btn-secondary" data-act="plan-angre" data-fk="plan-angre"${ps.history.length ? '' : ' disabled'}>${icon('undo')}Angre</button>
+      <button type="button" class="btn btn-secondary" data-act="plan-forslag" data-fk="plan-forslag">Lag forslag</button>
+      <button type="button" class="btn btn-secondary" data-act="plan-tom" data-fk="plan-tom">Tøm</button>
+    </div>
+    ${ps.confirm ? `<div class="note warn" role="alert">${icon('alert')}<div><p>${ps.confirm === 'forslag' ? 'Forslaget erstatter det som er tegnet nå.' : 'Alt som er tegnet, blir fjernet.'} Vil du fortsette?</p><div class="btn-row" style="margin-top:10px"><button type="button" class="btn btn-primary btn-sm" data-act="plan-ja" data-fk="plan-ja">Ja, fortsett</button><button type="button" class="btn btn-secondary btn-sm" data-act="plan-nei">Avbryt</button></div></div></div>` : ''}
+    <fieldset class="plain"><legend style="font-size:15px;margin-bottom:8px">Hva vil du tegne?</legend><div class="palette">${S.settings.steder.map(s => palOpt(s.id, s.navn)).join('')}${palOpt('', 'Viskelær')}</div></fieldset>
+    <div class="plan-wrap">${planGridHTML(d, ps)}</div>
+    <p class="small muted" style="margin:10px 0 0">Med tastatur: flytt med piltastene, og tegn eller visk ut med mellomrom eller Enter.</p>
+    <p class="small" style="margin:8px 0 0">${missing.length ? `Ikke tegnet ennå: ${esc(joinNo(missing))}.` : 'Alle avdelingene er tegnet.'}</p>
+  </fieldset></div>`;
+  if (!ro) h += `<div class="plan-save btn-row"><button type="button" class="btn btn-primary btn-lg" data-act="plan-lagre"${ps.dirty ? '' : ' disabled'}>Lagre plantegning</button>${ps.dirty ? '<button type="button" class="btn btn-secondary" data-act="plan-forkast">Forkast endringer</button><span class="small muted">Endringene er ikke lagret.</span>' : ''}</div>`;
+  $('#v-plantegning').innerHTML = h;
+}
+function planPush(){ const ps = S.ui.plan; ps.history.push(clone(ps.draft)); if (ps.history.length > 40) ps.history.shift(); }
+let PAINT = null;
+function paintCell(i){
+  const ps = S.ui.plan;
+  if (!PAINT || ps.draft.cells[i] === PAINT.val) return;
+  ps.draft.cells[i] = PAINT.val; ps.dirty = true; PAINT.changed = true;
+  const b = $(`#planGrid [data-cell="${i}"]`);
+  if (b){ b.classList.toggle('on', !!PAINT.val && PAINT.val !== ps.sel); b.classList.toggle('sel', !!PAINT.val && PAINT.val === ps.sel); }
+}
+/* Pointer events arrive with gaps on fast moves, so every cell on the line between two samples is filled. */
+function paintLine(a, b){
+  const cols = S.ui.plan.draft.cols;
+  let x0 = a % cols, y0 = Math.floor(a / cols);
+  const x1 = b % cols, y1 = Math.floor(b / cols), dx = Math.abs(x1 - x0), dy = -Math.abs(y1 - y0), sx = x0 < x1 ? 1 : -1, sy = y0 < y1 ? 1 : -1;
+  let err = dx + dy;
+  for (let guard = 0; guard < 200; guard++){
+    paintCell(y0 * cols + x0);
+    if (x0 === x1 && y0 === y1) break;
+    const e2 = 2 * err;
+    if (e2 >= dy){ err += dy; x0 += sx; }
+    if (e2 <= dx){ err += dx; y0 += sy; }
+  }
+}
+function togglePlanCell(i){
+  const ps = S.ui.plan; planPush();
+  ps.draft.cells[i] = ps.sel && ps.draft.cells[i] === ps.sel ? '' : ps.sel;
+  ps.dirty = true; ps.cursor = i; ps.msg = null;
+  renderView('plantegning'); const b = $(`#planGrid [data-cell="${i}"]`); if (b) b.focus();
+}
+
+/* ================= Info pages ================= */
+/* Texts that depend on where 4CAST runs and where the data is kept */
+function infoText(){
+  const cookieBase = '4CAST bruker ingen informasjonskapsler, ingen analyseverktøy og ingen sporing, og laster ikke inn noe fra andre nettsteder.';
+  if (MODE === 'local') return {
+    roller: 'Butikksjefen setter opp 4CAST på enheten og legger inn de ansatte. Ansatte logger inn ved å velge navnet sitt, og butikksjefen logger inn med en PIN-kode. Bare butikksjefen kan vurdere hendelser, publisere rapporter og endre innstillinger.',
+    synlig: ' Alle som bruker denne enheten, kan likevel teknisk sett lese det som er lagret i nettleseren. PIN-koden hindrer bare at andre logger inn som butikksjef i appen. Skriv derfor ingenting som ikke kan leses av kollegaer.',
+    lagring: 'Alt lagres i nettleseren på denne enheten, og ingenting sendes til en server. Navnene på brukerne lagres sammen med hendelsene, og PIN-koden lagres ikke i klartekst. Tømmer noen nettleserdataene for nettstedet, forsvinner alt. Under Innstillinger kan butikksjefen laste ned en sikkerhetskopi, eller nullstille 4CAST slik at alt slettes.',
+    cookies: cookieBase + ' Dataene lagres i nettleserens lokale lagring fordi appen ikke virker uten. Den lagringen brukes ikke til noe annet, og derfor spør vi ikke om samtykke.',
+    tilgang: 'Butikksjefen setter opp 4CAST og legger inn de ansatte under Innstillinger. Bare den som kjenner PIN-koden, kan logge inn som butikksjef.',
+    begrensning: 'Dataene ligger bare i nettleseren på denne enheten, og deles ikke med andre enheter.'
+  };
+  return {
+    roller: 'I demoen velger du hvem du vil logge inn som, uten PIN-kode. I den vanlige versjonen legger butikksjefen inn de ansatte, og logger selv inn med PIN-kode.',
+    synlig: '', lagring: 'Demoen lagrer ingenting. Alt forsvinner når siden lukkes.', cookies: cookieBase + ' Derfor spør vi ikke om samtykke.', tilgang: 'Demoen har ingen ekte innlogging.', begrensning: ''
+  };
+}
+function renderInfo(view){
+  const T = infoText();
+  const pages = {
+    om: `<h1 id="h-om" tabindex="-1">Om 4CAST</h1>
+      <p>4CAST hjelper dagligvarebutikker med å få oversikt over tyveri. Ansatte registrerer tyveri og mistenkt tyveri. Butikksjefen vurderer hver hendelse og ser statistikk over når og hvor det skjer.</p>
+      <h2>Slik virker det</h2><ul>
+      <li>Ansatte registrerer hva som skjedde, i hvilken avdeling, når det skjedde og en kort beskrivelse.</li>
+      <li>Nye hendelser vises på butikksjefens Hjem-side til de er vurdert.</li>
+      <li>Butikksjefen markerer hver hendelse som bekreftet tyveri eller ikke bekreftet, og kan skrive en kommentar.</li>
+      <li>Den ansatte ser resultatet og kommentaren under Mine.</li>
+      <li>Hver uke kan butikksjefen publisere en rapport som alle ansatte kan lese.</li></ul>
+      <h2>Innlogging og roller</h2>
+      <p>${T.roller}</p>
+      <h2>Statistikken</h2><ul>
+      <li>Bekreftede tyverier er hendelser butikksjefen har markert som bekreftet.</li>
+      <li>Andel bekreftet regnes av de vurderte hendelsene, ikke av dem som venter.</li>
+      <li>Mest utsatte tid er de tre sammenhengende timene med flest hendelser.</li>
+      <li>På kartet betyr høy at avdelingen har minst 20 % av hendelsene (og minst 3), og middels minst 10 % (og minst 2).</li>
+      <li>Tallene i en ukesrapport låses når rapporten publiseres.</li></ul>
+      <h2>Begrensninger</h2><ul><li>4CAST vet bare det som blir registrert.</li><li>Med få registreringer blir tallene usikre.</li>${T.begrensning ? `<li>${T.begrensning}</li>` : ''}</ul>
+      ${MODE === 'demo' ? '<h2>Om demoen</h2><p>Demoen bruker simulerte hendelser for en tenkt butikk over 12 uker. Navnene er oppdiktet, og ingenting lagres.</p>' : ''}`,
+    personvern: `<h1 id="h-personvern" tabindex="-1">Personvern og informasjons&shy;kapsler</h1>
+      <p>4CAST lagrer så lite som mulig. Appen er laget for å registrere hva som skjedde, ikke hvem som gjorde det.</p>
+      <h2>Dette lagres om hver hendelse</h2><ul>
+      <li>Om det var tyveri eller mistenkt tyveri</li><li>Avdelingen, valgt fra butikkens liste</li><li>Når det skjedde, og når det ble registrert</li><li>En kort beskrivelse, hvis den er fylt inn</li>
+      <li>Hvem som registrerte, som en bruker-ID fra innloggingen</li><li>Butikksjefens vurdering og eventuelle kommentar</li></ul>
+      <h2>Beskrivelser og kommentarer</h2>
+      <p>Ikke skriv navn, utseende eller andre opplysninger som kan identifisere personer. Beskriv hva som skjedde. Butikksjefen kan slette hendelser som inneholder slike opplysninger.</p>
+      <h2>Hvem ser hva</h2>
+      <p>Ansatte ser sine egne registreringer med resultat, og ukesrapportene. Butikksjefen ser alle registreringer og hvem som registrerte dem.${T.synlig}</p>
+      <h2>Hvor dataene lagres</h2>
+      <p>${T.lagring}</p>
+      <h2>Hvor lenge dataene lagres</h2>
+      <p>Hendelser lagres til butikksjefen sletter dem. Under Innstillinger kan butikksjefen slette hendelser eldre enn 24 måneder, eller alle hendelser.</p>
+      <h2>Informasjonskapsler</h2>
+      <p>${T.cookies}</p>
+      <h2>Spørsmål</h2><p>Spørsmål om hvordan butikken bruker 4CAST, rettes til butikksjefen.</p>`,
+    vilkar: `<h1 id="h-vilkar" tabindex="-1">Vilkår for bruk</h1>
+      <p>Disse vilkårene gjelder for bruk av 4CAST. Sist oppdatert 27. oktober 2026.</p>
+      <h2>Formål</h2><p>4CAST er et internt verktøy for butikkens ansatte. Det brukes til å registrere tyveri og mistanker om tyveri, vurdere dem og få oversikt over når og hvor det skjer.</p>
+      <h2>Riktig bruk</h2><ul><li>Registrer bare det du selv har sett eller funnet.</li><li>Skriv ikke navn, utseende eller andre opplysninger som kan identifisere personer.</li><li>Ikke bruk 4CAST til å følge med på bestemte kunder.</li><li>Hold kommentarer og rapporter saklige.</li></ul>
+      <h2>Sikkerhet</h2><p>Ansattes sikkerhet går foran varene. Ingen skal holde igjen, løpe etter eller bruke makt mot noen. Ring 112 hvis noen bruker vold eller truer.</p>
+      <h2>Vurderinger</h2><p>Butikksjefens vurdering er en intern vurdering for butikken, ikke en rettslig avgjørelse.</p>
+      <h2>Tilgang</h2><p>${T.tilgang}</p>
+      <h2>Data</h2><p>Butikken eier dataene den registrerer, og butikksjefen kan laste dem ned eller slette dem når som helst.</p>
+      <h2>Pris</h2><p>4CAST er gratis i denne versjonen. Det er ingen kjøp i appen, og derfor ingen vilkår om betaling, angrerett eller refusjon.</p>
+      <h2>Endringer</h2><p>Vilkårene kan bli endret når 4CAST blir videreutviklet.</p>`
+  };
+  $('#v-' + view).innerHTML = `<div class="card prose">${pages[view]}</div>`;
+}
+
+/* ================= Routing and rendering ================= */
+const VIEWS = ['login', 'ute', 'oppstart', 'registrer', 'mine', 'rapporter', 'hjem', 'logg', 'statistikk', 'innstillinger', 'plantegning', 'om', 'personvern', 'vilkar'];
+const ACCESS = {login: ['ute'], ute: ['ute'], oppstart: ['ute'], registrer: ['ansatt', 'sjef'], mine: ['ansatt'], rapporter: ['ansatt', 'sjef'], hjem: ['sjef'], logg: ['sjef'], statistikk: ['sjef'], innstillinger: ['sjef'], plantegning: ['sjef'], om: ['*'], personvern: ['*'], vilkar: ['*']};
+const VIEW_NAMES = {login: 'innloggingen', ute: 'startsiden', oppstart: 'oppstarten', registrer: 'Registrer hendelse', mine: 'Mine hendelser', rapporter: 'Ukesrapporter', hjem: 'Hjem', logg: 'Hendelseslogg',
+  statistikk: 'Statistikk', innstillinger: 'Innstillinger', plantegning: 'Plantegning', om: 'Om 4CAST', personvern: 'Personvern og informasjonskapsler', vilkar: 'Vilkår for bruk'};
+function homeOf(r){ return r === 'sjef' ? 'hjem' : r === 'ansatt' ? 'registrer' : loggedOutHome(); }
+/* When nobody is logged in, only one of the three start pages applies at a time. */
+function loggedOutHome(){
+  return S.mode === 'none' ? 'ute' : S.mode === 'local' && !activeUsers().length ? 'oppstart' : 'login';
+}
+function allowed(v, r){
+  if (v === 'login' || v === 'ute' || v === 'oppstart') return r === 'ute' && v === loggedOutHome();
+  const a = ACCESS[v]; return !!a && (a.includes('*') || a.includes(r));
+}
+/* The back button uses the app's own list of visited pages, so it never leaves the app, even when the page is embedded in another page. */
+function roleAs(as){ return !S.me ? 'ute' : as || (S.me.sjef ? 'sjef' : 'ansatt'); }
+function remember(){ if (!S.view) return; S.hist.push({v: S.view, as: S.viewAs, y: Math.round(window.scrollY)}); if (S.hist.length > 50) S.hist.shift(); }
+function backTarget(){
+  while (S.hist.length){
+    const e = S.hist[S.hist.length - 1];
+    if ((!e.as || (S.me && S.me.sjef)) && allowed(e.v, roleAs(e.as)) && !(e.v === S.view && e.as === S.viewAs)) return e;
+    S.hist.pop();
+  }
+  return null;
+}
+function goBack(){
+  const e = backTarget(); if (!e) return;
+  S.hist.pop();
+  if (e.as !== S.viewAs){ S.viewAs = e.as; $('#v-registrer').innerHTML = ''; }
+  go(e.v, true);
+  if (e.y) window.scrollTo(0, e.y);
+}
+const RENDER = {login: () => S.mode === 'local' ? renderLoginLocal() : renderLogin(), ute: renderUte, oppstart: renderOppstart, registrer: renderRegistrer, mine: renderMine, rapporter: renderRapporter, hjem: renderHjem, logg: renderLogg,
+  statistikk: renderStatistikk, innstillinger: renderInnstillinger, plantegning: renderPlantegning, om: () => renderInfo('om'), personvern: () => renderInfo('personvern'), vilkar: () => renderInfo('vilkar')};
+function renderView(v){
+  if (!v || !RENDER[v]) return;
+  const ae = document.activeElement, fk = ae && ae.dataset ? ae.dataset.fk : null;
+  let sel = null;
+  if (fk && (ae.tagName === 'TEXTAREA' || (ae.tagName === 'INPUT' && ae.type === 'text'))){ try { sel = [ae.selectionStart, ae.selectionEnd]; } catch (e) { sel = null; } }
+  try { RENDER[v](); }
+  catch (e) { reportError(e); $('#v-' + v).innerHTML = note('err', 'Noe gikk galt da siden skulle vises. Last inn siden på nytt.'); }
+  if (fk){
+    const el = $(`[data-fk="${CSS.escape(fk)}"]`);
+    if (el && document.activeElement !== el){ el.focus({preventScroll: true}); if (sel && el.setSelectionRange){ try { el.setSelectionRange(sel[0], sel[1]); } catch (e) { /* ignore */ } } }
+  }
+}
+function markSeen(v){
+  if (!S.me || !S.canWrite) return;
+  if (v === 'mine'){
+    const newest = mine().reduce((m, i) => i.rev && i.rev.tid > m ? i.rev.tid : m, '');
+    if (newest && newest > S.status.mineSett) Store.saveStatus({...S.status, mineSett: newest}).catch(() => {});
+  } else if (v === 'rapporter' && role() === 'ansatt'){
+    const newest = S.reports.reduce((m, r) => r.publisert > m ? r.publisert : m, '');
+    if (newest && newest > S.status.rapporterSett) Store.saveStatus({...S.status, rapporterSett: newest}).catch(() => {});
+  }
+}
+function go(v, focusHeading, push){
+  const r = role();
+  if (!VIEWS.includes(v) || !allowed(v, r)) v = homeOf(r);
+  if (S.view !== v){
+    if (push) remember();
+    if (S.view === 'innstillinger' && !S.ui.setupDirty) S.ui.setupMsg = null;
+    if (S.view === 'plantegning') S.ui.plan.msg = null;
+    /* Empty the view we leave, so hidden views never keep stale content or duplicate ids. The form keeps its state. */
+    if (S.view && S.view !== 'registrer') $('#v-' + S.view).innerHTML = '';
+    S.ui.open = null; S.ui.edit = null; S.ui.draft = null; S.ui.confirmDel = null;
+    if (v === 'mine') S.ui.mineSince = S.status.mineSett;
+    if (v === 'rapporter') S.ui.repSince = S.status.rapporterSett;
+  }
+  S.view = v;
+  if (location.hash.slice(1) !== v){ try { history.replaceState(null, '', '#' + v); } catch (e) { /* ignore */ } }
+  for (const id of VIEWS){ const el = $('#v-' + id); el.hidden = id !== v; if (id === v) el.setAttribute('aria-labelledby', 'h-' + id); else el.removeAttribute('aria-labelledby'); }
+  renderChrome(); renderView(v); hideTip();
+  if (focusHeading){ window.scrollTo(0, 0); const hd = $('#h-' + v); if (hd) hd.focus({preventScroll: true}); }
+  markSeen(v);
+}
+function onData(){
+  recompute();
+  const r = role();
+  if ((S.view === 'ute' || S.view === 'login' || S.view === 'oppstart') && r !== 'ute'){ const want = location.hash.slice(1); S.hist = []; go(allowed(want, r) ? want : homeOf(r)); return; }
+  if (!S.view || !allowed(S.view, r)){ go(homeOf(r)); return; }
+  renderChrome();
+  if (S.view === 'innstillinger' && S.ui.setupDirty) return;
+  if (S.view === 'plantegning' && (S.ui.plan.dirty || PAINT)) return;
+  renderView(S.view);
+}
+function login(u){
+  S.me = {id: u.id, name: u.navn, sjef: u.sjef};
+  S.raw.status = (S.mode === 'local' ? LOCAL.status[u.id] : MEM_STATUS[u.id]) || null; S.viewAs = null; S.ui = UI_DEFAULTS(); S.hist = [];
+  $('#v-registrer').innerHTML = '';
+  recompute(); go(homeOf(role()), true);
+}
+function logout(){ S.me = null; S.viewAs = null; S.ui = UI_DEFAULTS(); S.hist = []; $('#v-registrer').innerHTML = ''; go(loggedOutHome(), true); }
+
+/* ================= Events ================= */
+document.addEventListener('click', async e => {
+  const sumLink = e.target.closest('[data-focus]');
+  if (sumLink){ e.preventDefault(); const el = document.getElementById(sumLink.dataset.focus); if (el){ el.focus(); el.scrollIntoView({block: 'center'}); } return; }
+  const pc = e.target.closest('#planGrid .pc');
+  if (pc){ if (e.detail === 0 && S.canWrite) togglePlanCell(+pc.dataset.cell); return; }
+  const loc = e.target.closest('#v-statistikk [data-loc]');
+  if (loc){ S.ui.mapSel = loc.getAttribute('data-loc'); renderView('statistikk'); return; }
+  const t = e.target.closest('[data-act]'); if (!t) return;
+  const a = t.dataset.act, id = t.dataset.id;
+  const today = now().day;
+  if (a === 'skip'){ e.preventDefault(); $('#main').focus(); return; }
+  if (a === 'login'){
+    if (S.mode === 'local'){
+      const u = activeUsers().find(x => x.id === id); if (!u) return;
+      if (!u.sjef){ login(u); return; }
+      S.ui.pinFor = u.id; S.ui.forgot = false; S.ui.resetText = '';
+      renderView('login'); const f = $('#pin'); if (f) f.focus();
+      return;
+    }
+    const u = DEMO_USERS.find(x => x.id === id); if (u) login(u); return;
+  }
+  if (a === 'back'){ goBack(); return; }
+  if (a === 'logout'){ logout(); return; }
+  if (a === 'pin-avbryt'){ const pid = S.ui.pinFor; S.ui.pinFor = null; S.ui.forgot = false; S.ui.resetText = ''; renderView('login'); const b = pid ? $(`[data-fk="u-${CSS.escape(pid)}"]`) : null; if (b) b.focus(); return; }
+  if (a === 'pin-glemt'){ S.ui.forgot = true; renderView('login'); const hd = $('#resetH-glemt'); if (hd) hd.focus(); return; }
+  if (a === 'nullstill'){
+    if (S.mode !== 'local' || S.ui.resetText.trim().toUpperCase() !== 'NULLSTILL' || (S.me && role() !== 'sjef')) return;
+    resetLocal(); toast('4CAST er nullstilt på denne enheten'); logout(); return;
+  }
+  if (a === 'user-fjern'){ S.ui.confirmUser = id; renderView('innstillinger'); const el = $(`[data-fk="ufj-${CSS.escape(id)}"]`); if (el) el.focus(); return; }
+  if (a === 'user-fjern-nei'){ S.ui.confirmUser = null; renderView('innstillinger'); const el = $(`[data-fk="uf-${CSS.escape(id)}"]`); if (el) el.focus(); return; }
+  if (a === 'user-fjern-ja'){
+    const u = S.users.find(x => x.id === id && !x.fjernet && !x.sjef);
+    if (S.mode !== 'local' || role() !== 'sjef' || !u) return;
+    try { saveLocal({...LOCAL, brukere: LOCAL.brukere.map(x => x.id === id ? {...x, fjernet: true} : x)}); toast(`${u.navn} er fjernet`); }
+    catch (err) { toast(errText(err)); }
+    S.ui.confirmUser = null; renderChrome(); renderView('innstillinger');
+    const el = $('#u-navn'); if (el) el.focus();
+    return;
+  }
+  if (a === 'backup'){ if (S.mode === 'local' && role() === 'sjef') await saveFile(`4cast-sikkerhetskopi-${dateOf(today)}.json`, backupText(), 'application/json'); return; }
+  if (a === 'restore-nei'){ S.ui.restore = null; renderView(S.view); const el = $(`#restore-${S.view === 'oppstart' ? 'oppstart' : 'innstillinger'}`); if (el) el.focus(); return; }
+  if (a === 'restore-ja'){
+    const r = S.ui.restore;
+    if (S.mode !== 'local' || !r || !r.ok || (S.me && role() !== 'sjef')) return;
+    try { saveLocal(r.data); }
+    catch (err) { S.ui.restore = {ok: false, msg: errText(err)}; renderView(S.view); return; }
+    toast('Sikkerhetskopien er hentet inn. Logg inn for å fortsette.'); logout(); return;
+  }
+  if (a === 'preview-on'){ remember(); S.viewAs = 'ansatt'; $('#v-registrer').innerHTML = ''; go('registrer', true); return; }
+  /* Pages seen in the preview are left out of the history, so Tilbake never reopens the preview */
+  if (a === 'preview-off'){ S.viewAs = null; S.hist = S.hist.filter(h => !h.as); $('#v-registrer').innerHTML = ''; go('hjem', true); return; }
+  if (a === 'reg-ny'){ hideDone(); const f = $('#type-tyveri'); if (f) f.focus(); return; }
+  if (a === 'reg-angre'){
+    const d = S.ui.regDone; if (!d) return;
+    try { await Store.removeIncident(d.id, false); hideDone(); toast('Hendelsen er trukket tilbake'); const f = $('#type-tyveri'); if (f) f.focus(); }
+    catch (err) { toast(errText(err)); }
+    return;
+  }
+  if (a === 'inc-toggle'){
+    S.ui.open = S.ui.open === id ? null : id; S.ui.edit = null; S.ui.draft = null; S.ui.confirmDel = null;
+    renderView(S.view);
+    if (S.ui.open){ const first = $(`#incb-${CSS.escape(id)} input[type=radio]`), it = S.byId.get(id); if (first && it && !it.rev) first.focus(); }
+    return;
+  }
+  if (a === 'rev-edit'){ S.ui.edit = id; S.ui.draft = null; renderView(S.view); const r = $(`#incb-${CSS.escape(id)} input[type=radio]:checked`) || $(`#incb-${CSS.escape(id)} input[type=radio]`); if (r) r.focus(); return; }
+  if (a === 'rev-cancel'){ const i = S.byId.get(id); S.ui.draft = null; if (i && i.rev){ S.ui.edit = null; } else { S.ui.open = null; } renderView(S.view); const hd = $(`[data-fk="ih-${CSS.escape(id)}"]`); if (hd) hd.focus(); return; }
+  if (a === 'del'){ S.ui.confirmDel = id; renderView(S.view); const el = $(`[data-fk="dj-${CSS.escape(id)}"]`); if (el) el.focus(); return; }
+  if (a === 'del-nei'){ S.ui.confirmDel = null; renderView(S.view); const el = $(`[data-fk="d-${CSS.escape(id)}"]`); if (el) el.focus(); return; }
+  if (a === 'del-ja'){
+    const i = S.byId.get(id); if (!i || S.ui.busy) return;
+    if (role() !== 'sjef' && (i.av !== S.me.id || i.rev)) return;
+    S.ui.busy = true;
+    try { await Store.removeIncident(id, role() === 'sjef' && !!i.rev); toast('Hendelsen er slettet'); }
+    catch (err) { toast(errText(err)); }
+    finally { S.ui.busy = false; S.ui.confirmDel = null; S.ui.open = null; renderView(S.view); const hd = $('#h-' + S.view); if (hd) hd.focus(); }
+    return;
+  }
+  if (a === 'home-flere'){ S.ui.homeShown += 20; renderView('hjem'); return; }
+  if (a === 'log-res'){ S.ui.logRes = t.dataset.v; S.ui.logShown = 40; renderView('logg'); return; }
+  if (a === 'log-flere'){ S.ui.logShown += 40; renderView('logg'); return; }
+  if (a === 'mine-flere'){ S.ui.mineShown += 30; renderView('mine'); return; }
+  if (a === 'rep-flere'){ S.ui.repShown += 12; renderView('rapporter'); return; }
+  if (a === 'stat-period'){ S.ui.statPeriod = t.dataset.v; renderView('statistikk'); return; }
+  if (a === 'stat-basis'){ S.ui.statBasis = t.dataset.v; S.ui.mapSel = null; renderView('statistikk'); return; }
+  if (a === 'map-sel'){ S.ui.mapSel = id; renderView('statistikk'); return; }
+  if (a === 'rep-week'){ S.ui.repWeek = t.dataset.week; S.ui.repMsgFor = null; return; }
+  if (a === 'rep-edit'){ S.ui.repWeek = t.dataset.week; S.ui.repMsgFor = null; renderView('rapporter'); window.scrollTo(0, 0); const el = $('#rep-melding'); if (el) el.focus(); return; }
+  if (a === 'rep-publish'){
+    if (role() !== 'sjef' || !S.canWrite || S.ui.busy) return;
+    const wid = S.ui.repWeek, wk = weekFromId(wid); if (!wk) return;
+    S.ui.busy = true;
+    try {
+      await Store.saveReport(wid, {uke: wid, tall: reportData(wid), melding: cleanText(S.ui.repMsg, MSG_MAX), publisert: now().str, av: S.me.id});
+      S.ui.repMsgFor = null; toast(`Rapporten for uke ${wk.week} er publisert`);
+    } catch (err) { toast(errText(err)); }
+    finally { S.ui.busy = false; renderView('rapporter'); const hd = $(`#rp-${CSS.escape(wid)}`); if (hd){ hd.setAttribute('tabindex', '-1'); hd.focus(); } }
+    return;
+  }
+  if (a === 'csv'){ await saveFile(`4cast-hendelser-${dateOf(today)}.csv`, buildCsv(), 'text/csv;charset=utf-8'); return; }
+  if (a === 'sted-ny' || a === 'sted-fjern'){
+    const d = S.ui.setupDraft; S.ui.setupDirty = true;
+    if (a === 'sted-ny') d.steder.push({id: 's' + Date.now().toString(36).slice(-5) + Math.random().toString(36).slice(2, 5), navn: ''});
+    else if (d.steder.length > 1) d.steder.splice(+t.dataset.k, 1);
+    renderView('innstillinger');
+    const el = a === 'sted-ny' ? $(`#sn-${d.steder.length - 1}`) : $('[data-fk="sted-ny"]'); if (el) el.focus();
+    return;
+  }
+  if (a === 'setup-angre'){ S.ui.setupDirty = false; S.ui.setupDraft = null; S.ui.setupMsg = null; renderView('innstillinger'); const hd = $('#h-innstillinger'); if (hd) hd.focus(); return; }
+  if (a === 'slett-gamle' || a === 'slett-alle'){
+    if (S.ui.busy || role() !== 'sjef') return;
+    const ids = a === 'slett-alle' ? S.raw.hendelser.map(r => r.id) : S.inc.filter(i => i.day < today - 730).map(i => i.id);
+    if (!ids.length) return;
+    S.ui.busy = true; t.disabled = true;
+    const pr = $('#wipeProgress');
+    try { await Store.removeIncidents(ids, (n, total) => { if (pr) pr.textContent = `Sletter ${n} av ${total} …`; }); S.ui.confirmWipe = ''; toast(`${ids.length} hendelser er slettet`); }
+    catch (err) { toast(errText(err)); }
+    finally { S.ui.busy = false; renderView('innstillinger'); }
+    return;
+  }
+  if (a.startsWith('plan-')){
+    const ps = S.ui.plan;
+    if (a === 'plan-angre' && ps.history.length){ ps.draft = ps.history.pop(); ps.dirty = true; ps.msg = null; }
+    else if (a === 'plan-forslag' || a === 'plan-tom'){
+      const kind = a === 'plan-forslag' ? 'forslag' : 'tom';
+      if (ps.draft.cells.some(Boolean)) ps.confirm = kind;
+      else { planPush(); ps.draft = kind === 'forslag' ? templatePlan(S.settings) : emptyPlan(ps.draft.cols, ps.draft.rows); ps.dirty = true; }
+    }
+    else if (a === 'plan-ja'){ planPush(); ps.draft = ps.confirm === 'forslag' ? templatePlan(S.settings) : emptyPlan(ps.draft.cols, ps.draft.rows); ps.dirty = true; ps.confirm = null; ps.cursor = 0; }
+    else if (a === 'plan-nei') ps.confirm = null;
+    else if (a === 'plan-forkast'){ ps.dirty = false; ps.draft = null; ps.history = []; ps.confirm = null; ps.msg = null; }
+    else if (a === 'plan-lagre'){
+      if (!S.canWrite || S.ui.busy || role() !== 'sjef') return;
+      S.ui.busy = true;
+      try { await Store.saveSettings({butikk: S.settings.butikk, steder: clone(S.settings.steder), plan: clone(ps.draft)}); ps.dirty = false; ps.draft = null; ps.history = []; ps.msg = {kind: 'info', text: 'Plantegningen er lagret. Kartet under Statistikk bruker den nå.'}; toast('Plantegningen er lagret'); }
+      catch (err) { ps.msg = {kind: 'err', text: errText(err)}; }
+      finally { S.ui.busy = false; }
+      renderView('plantegning'); const hd = $('#h-plantegning'); if (hd) hd.focus(); return;
+    }
+    renderView('plantegning');
+    if (a === 'plan-ja' || a === 'plan-nei' || a === 'plan-forkast'){ const el = $('[data-fk="plan-forslag"]'); if (el) el.focus(); }
+    else if (ps.confirm){ const el = $('[data-fk="plan-ja"]'); if (el) el.focus(); }
+    return;
+  }
+});
+document.addEventListener('input', e => {
+  const el = e.target;
+  if (el.id === 'beskrivelse'){ $('#beskr-count').textContent = counter(el.value.length, DESC_MAX); return; }
+  if (el.closest && el.closest('#setupForm') && el.dataset.set){ setupInput(el); return; }
+  if (el.dataset && el.dataset.rv === 'kom'){
+    if (S.ui.draft && S.ui.draft.id === el.dataset.id) S.ui.draft.kommentar = el.value;
+    const c = $(`#rv-c-${CSS.escape(el.dataset.id)}`); if (c) c.textContent = counter(el.value.length, COMMENT_MAX);
+    return;
+  }
+  const k = el.dataset && el.dataset.actInput;
+  if (k === 'rep-melding'){ S.ui.repMsg = el.value; const c = $('#rep-count'); if (c) c.textContent = counter(el.value.length, MSG_MAX); return; }
+  if (k === 'wipe'){ S.ui.confirmWipe = el.value; const b = $('[data-act="slett-alle"]'); if (b) b.disabled = !(el.value.trim().toUpperCase() === 'SLETT' && S.inc.length); return; }
+  if (k === 'reset'){ S.ui.resetText = el.value; const sec = el.closest('section'), b = sec && sec.querySelector('[data-act="nullstill"]'); if (b) b.disabled = el.value.trim().toUpperCase() !== 'NULLSTILL'; return; }
+});
+document.addEventListener('change', e => {
+  const el = e.target;
+  if (el.closest && el.closest('#setupForm') && el.dataset.set){ setupInput(el); return; }
+  if (el.name === 'naar' && el.closest('#regForm')) updateNaar();
+  if (el.dataset && el.dataset.rv === 'res'){ if (S.ui.draft && S.ui.draft.id === el.dataset.id) S.ui.draft.resultat = el.value; const er = $(`#rv-err-${CSS.escape(el.dataset.id)}`); if (er) er.hidden = true; return; }
+  const k = el.dataset && el.dataset.actInput;
+  if (k === 'f-periode'){ S.ui.logPeriod = el.value; S.ui.logShown = 40; renderView('logg'); }
+  else if (k === 'f-sted'){ S.ui.logSted = el.value; S.ui.logShown = 40; renderView('logg'); }
+  else if (k === 'rep-uke'){ S.ui.repWeek = el.value; renderView('rapporter'); }
+  else if (k === 'pal'){ S.ui.plan.sel = el.value; renderView('plantegning'); }
+  else if (k === 'restore') readBackupFile(el);
+  else if (k === 'plan-cols' || k === 'plan-rows'){
+    const ps = S.ui.plan, v = Math.max(PLAN_MIN, Math.min(PLAN_MAX, +el.value));
+    planPush();
+    ps.draft = resizePlan(ps.draft, k === 'plan-cols' ? v : ps.draft.cols, k === 'plan-rows' ? v : ps.draft.rows);
+    ps.dirty = true; ps.cursor = 0; renderView('plantegning');
+  }
+});
+document.addEventListener('submit', async e => {
+  const f = e.target;
+  if (f.id === 'regForm'){ submitReg(e); return; }
+  if (f.id === 'setupForm'){ saveSetup(e); return; }
+  const local = {oppstartForm: submitOppstart, pinForm: submitPin, userForm: submitUser, pinChangeForm: submitPinChange}[f.id];
+  if (local){ e.preventDefault(); local(); return; }
+  if (f.dataset && f.dataset.review){
+    e.preventDefault();
+    const id = f.dataset.review, i = S.byId.get(id), d = S.ui.draft;
+    if (!i || !d || d.id !== id || role() !== 'sjef' || !S.canWrite || S.ui.busy) return;
+    if (!d.resultat){ const er = $(`#rv-err-${CSS.escape(id)}`); er.innerHTML = icon('alert') + '<span>Velg om det var et bekreftet tyveri eller ikke</span>'; er.hidden = false; const r = f.querySelector('input[type=radio]'); if (r) r.focus(); return; }
+    const inHome = S.view === 'hjem', list = pending(), k = list.findIndex(x => x.id === id), next = inHome ? (list[k + 1] || list[k - 1] || null) : null;
+    S.ui.busy = true;
+    try {
+      await Store.setReview(id, {resultat: d.resultat, kommentar: cleanText(d.kommentar, COMMENT_MAX), av: S.me.id, tid: now().str, hendelseAv: i.av});
+      S.ui.edit = null; S.ui.draft = null; if (inHome) S.ui.open = null;
+      toast('Vurderingen er lagret');
+    } catch (err) { toast(errText(err)); }
+    finally {
+      S.ui.busy = false; renderView(S.view);
+      const target = inHome ? (next && S.byId.get(next.id) && S.byId.get(next.id).res === 'venter' ? $(`[data-fk="ih-${CSS.escape(next.id)}"]`) : $('#newH')) : $(`[data-fk="ih-${CSS.escape(id)}"]`);
+      if (target) target.focus();
+    }
+  }
+});
+window.addEventListener('hashchange', () => { const v = location.hash.slice(1); if (VIEWS.includes(v) && v !== S.view) go(v, true, true); });
+let rzT = null;
+window.addEventListener('resize', () => { clearTimeout(rzT); rzT = setTimeout(() => { if (S.view === 'statistikk') renderView('statistikk'); }, 200); });
+
+/* Floor plan drawing with mouse, pen or finger */
+document.addEventListener('pointerdown', e => {
+  const c = e.target.closest && e.target.closest('#planGrid .pc');
+  if (!c || !S.canWrite || role() !== 'sjef' || e.button > 0) return;
+  e.preventDefault();
+  const ps = S.ui.plan, i = +c.dataset.cell;
+  planPush();
+  PAINT = {val: ps.sel && ps.draft.cells[i] === ps.sel ? '' : ps.sel, changed: false, last: i};
+  try { if (c.hasPointerCapture && c.hasPointerCapture(e.pointerId)) c.releasePointerCapture(e.pointerId); } catch (_) { /* ignore */ }
+  ps.cursor = i; ps.msg = null;
+  paintCell(i);
+});
+document.addEventListener('pointermove', e => {
+  if (!PAINT) return;
+  const el = document.elementFromPoint(e.clientX, e.clientY);
+  const c = el && el.closest && el.closest('#planGrid .pc');
+  if (!c) return;
+  const i = +c.dataset.cell;
+  if (i !== PAINT.last){ paintLine(PAINT.last, i); PAINT.last = i; }
+});
+function endPaint(){
+  if (!PAINT) return;
+  const changed = PAINT.changed; PAINT = null;
+  if (!changed) S.ui.plan.history.pop();
+  renderView('plantegning');
+  const b = $(`#planGrid [data-cell="${S.ui.plan.cursor}"]`); if (b) b.focus({preventScroll: true});
+}
+document.addEventListener('pointerup', endPaint);
+document.addEventListener('pointercancel', endPaint);
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') hideTip();
+  const c = e.target.closest && e.target.closest('#planGrid .pc'); if (!c) return;
+  const d = S.ui.plan.draft, i = +c.dataset.cell, x = i % d.cols, y = Math.floor(i / d.cols);
+  let n = null;
+  if (e.key === 'ArrowRight' && x < d.cols - 1) n = i + 1;
+  else if (e.key === 'ArrowLeft' && x > 0) n = i - 1;
+  else if (e.key === 'ArrowDown' && y < d.rows - 1) n = i + d.cols;
+  else if (e.key === 'ArrowUp' && y > 0) n = i - d.cols;
+  else if (e.key === 'Home') n = y * d.cols;
+  else if (e.key === 'End') n = y * d.cols + d.cols - 1;
+  if (n == null) return;
+  e.preventDefault();
+  const nb = $(`#planGrid [data-cell="${n}"]`); if (!nb) return;
+  c.tabIndex = -1; nb.tabIndex = 0; nb.focus(); S.ui.plan.cursor = n;
+});
+
+/* Export */
+function csvCell(v){ let s = v == null ? '' : String(v); if (/^[=+\-@\t\r]/.test(s)) s = "'" + s; return /[";\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; }
+function buildCsv(){
+  const head = ['Dato', 'Klokkeslett', 'Type', 'Avdeling', 'Beskrivelse', 'Registrert av', 'Registrert', 'Resultat', 'Kommentar', 'Vurdert'];
+  const rows = S.inc.slice().sort((a, b) => a.tid < b.tid ? -1 : 1).map(i => [i.tid.slice(0, 10), i.tid.slice(11), TYPES[i.type], stedName(i.sted), i.beskrivelse, i.av && S.me && i.av === S.me.id ? displayName() : (S.names[i.av] || 'Ukjent ansatt'), i.registrert.replace('T', ' '), RES[i.res], i.rev ? i.rev.kommentar : '', i.rev && i.rev.tid ? i.rev.tid.replace('T', ' ') : '']);
+  return String.fromCharCode(0xFEFF) + [head, ...rows].map(r => r.map(csvCell).join(';')).join('\r\n') + '\r\n';
+}
+async function saveFile(filename, data, mime){
+  const blob = new Blob([data], {type: mime}), url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
+
+/* Tooltips for charts */
+const tip = $('#tip');
+function showTip(el, x, y){
+  const p = el.dataset.tip.split('|');
+  tip.innerHTML = `<b>${esc(p[0])}</b>` + p.slice(1).map(s => `<span style="display:block">${esc(s)}</span>`).join('');
+  tip.hidden = false;
+  const w = tip.offsetWidth, h = tip.offsetHeight;
+  let left = x + 14, top = y - h - 10;
+  if (left + w > window.innerWidth - 8) left = x - w - 14;
+  if (left < 8) left = 8;
+  if (top < 8) top = y + 18;
+  tip.style.transform = `translate(${Math.round(left)}px,${Math.round(top)}px)`;
+}
+function hideTip(){ tip.hidden = true; }
+document.addEventListener('pointermove', e => { const el = e.target.closest && e.target.closest('[data-tip]'); if (el) showTip(el, e.clientX, e.clientY); else if (!tip.hidden) hideTip(); });
+document.addEventListener('pointerdown', e => { const el = e.target.closest && e.target.closest('[data-tip]'); if (el && e.pointerType !== 'mouse') showTip(el, e.clientX, e.clientY); else if (!el) hideTip(); });
+window.addEventListener('scroll', hideTip, {passive: true});
+
+/* ================= Boot ================= */
+$$('[data-logo]').forEach(el => { el.outerHTML = LOGO; });
+window.addEventListener('error', e => reportError(e.error || e.message));
+window.addEventListener('unhandledrejection', e => reportError(e.reason));
+function boot(){
+  const h = location.hash.slice(1), info = ['om', 'personvern', 'vilkar'].includes(h) ? h : null;
+  if (MODE === 'local'){ startLocal(); go(info || loggedOutHome()); return; }
+  S.mode = 'memory'; S.ready = true;
+  S.exportAvail = true;
+  S.names = Object.fromEntries(DEMO_USERS.map(u => [u.id, u.navn]));
+  if (MODE === 'demo'){
+    loadDemo();
+  } else recompute();
+  go(info || 'login');
+}
+boot();
+
+/* Test hooks (only in the test build) */
+if (MODE === 'test'){
+  window.__fcErrors = window.__fcErrors || [];
+  window.FC = {
+    S, go, renderView, onData, recompute, simulate, reportData, weekIdOf, weekFromId, periodRange, parseDate, dateOf, mondayOf, isoWeek,
+    templatePlan, emptyPlan, DEFAULT_SETTINGS, DEMO_USERS, clone, pending, mine, role, loadDemo, setNow: setNowOverride,
+    load(data){
+      S.mode = 'memory'; S.users = []; S.notice = null; S.ready = true;
+      S.raw = {hendelser: data.hendelser || [], vurderinger: data.vurderinger || [], rapporter: data.rapporter || [], oppsett: data.oppsett || null, status: null};
+      setNowOverride(data.now || null);
+      MEM_STATUS = data.statuses || {};
+      S.names = Object.fromEntries(DEMO_USERS.map(u => [u.id, u.navn]));
+      S.me = null; S.viewAs = null; S.canWrite = data.canWrite !== false; S.ui = UI_DEFAULTS(); S.hist = [];
+      $('#v-registrer').innerHTML = '';
+      recompute(); go('login');
+    },
+    loginAs(id, opts){
+      const u = DEMO_USERS.find(x => x.id === id) || {id, navn: (opts && opts.navn) || 'Test', sjef: !!(opts && opts.sjef)};
+      if (opts && opts.canWrite === false) S.canWrite = false;
+      login(u);
+    },
+    get memStatus(){ return MEM_STATUS; },
+    /* The local version, run against its own test key so the tests never touch real data */
+    local: {
+      key: LS_KEY, backupText, activeUsers,
+      start(clear){
+        if (clear){ try { localStorage.removeItem(LS_KEY); localStorage.removeItem(LS_KEY + '.feil'); } catch (e) { /* ignore */ } }
+        S.me = null; S.viewAs = null; S.ui = UI_DEFAULTS(); S.hist = []; $('#v-registrer').innerHTML = '';
+        startLocal(); go(loggedOutHome());
+      },
+      get stored(){ try { return JSON.parse(localStorage.getItem(LS_KEY)); } catch (e) { return null; } }
+    },
+    errors: window.__fcErrors
+  };
+}
+})();
+</script>
+</body>
+</html>
